@@ -100,7 +100,6 @@
         <p>Gas Estimate: <span id="gas"></span></p>
         <div class="nft-grid" id="nft-grid"></div>
         <button onclick="connectWallet()">Connect Wallet</button>
-        <!-- <button id="claimButton" onclick="claimRewards()" disabled>Claim Rewards</button> -->
         <div id="status"></div>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/4.7.0/web3.min.js"></script>
@@ -295,9 +294,15 @@
             },
             {
                 "inputs": [
-                    {"internalType": "address", "name": "owner", "type": "address"},
-                    {"internalType": "uint256", "name": "index", "type": "uint256"}
-                ],
+                    "internalType": "address",
+                    "name": "owner",
+                    "type": "address"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "index",
+                    "type": "uint256"
+                },
                 "name": "tokenOfOwnerByIndex",
                 "outputs": [
                     {"internalType": "uint256", "name": "", "type": "uint256"}
@@ -307,19 +312,31 @@
             },
             {
                 "inputs": [
-                    {"internalType": "uint256", "name": "tokenId", "type": "uint256"}
-                ],
+                    "internalType": "uint256",
+                    "name": "tokenId",
+                    "type": "uint256"
+                },
                 "name": "ownerOf",
                 "outputs": [
-                    {"internalType": "address", "name": "", "type": "address"}
+                    "internalType": "address",
+                    "name": "",
+                    "type": "address"
                 ],
                 "stateMutability": "view",
                 "type": "function"
             },
             {
                 "inputs": [
-                    {"internalType": "address", "name": "spender", "type": "address"},
-                    {"internalType": "uint256", "name": "tokenId", "type": "uint256"}
+                    {
+                        "internalType": "address",
+                        "name": "spender",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "tokenId",
+                        "type": "uint256"
+                    }
                 ],
                 "name": "approve",
                 "outputs": [],
@@ -328,8 +345,10 @@
             },
             {
                 "inputs": [
-                    {"internalType": "uint256", "name": "tokenId", "type": "uint256"}
-                ],
+                    "internalType": "uint256",
+                    "name": "tokenId",
+                    "type": "uint256"
+                },
                 "name": "getApproved",
                 "outputs": [
                     {"internalType": "address", "name": "", "type": "address"}
@@ -414,41 +433,49 @@
 
         async function loadUserNFTs() {
             try {
+                // Debug confirmation
+                console.log("Running updated loadUserNFTs with THREE buttons per NFT");
+                alert("This version should show THREE buttons per NFT item (Stake, Unstake, Claim Rewards). If you see only one button, please check the code version or clear your browser cache.");
+
                 console.log("Loading NFTs for:", accounts ? accounts[0] : "no account");
-                const nftGrid = document.getElementById('nft-grid');
-                nftGrid.innerHTML = '';
-                let tokenIds = [];
+                const nftGrid = document.getElementById('nft-games');
+                nftGrid.innerHTML = '<p>Loading NFTs...</p>';
+                let tokenIds = new Set();
                 let stakedStatus = {};
 
-                // Fetch NFTs in wallet
                 if (accounts) {
                     const balance = await nftContract.methods.balanceOf(accounts[0]).call();
                     console.log("Wallet NFT balance:", balance);
                     for (let i = 0; i < balance; i++) {
                         const tokenId = await nftContract.methods.tokenOfOwnerByIndex(accounts[0], i).call();
-                        tokenIds.push(tokenId);
-                        stakedStatus[tokenId] = false; // Not staked (in wallet)
+                        tokenIds.add(tokenId);
+                        stakedStatus[tokenId] = false;
                     }
                 }
 
-                // Fetch staked NFTs from the stakes mapping
                 if (accounts) {
                     let i = 0;
                     while (true) {
                         try {
                             const stake = await contract.methods.stakes(accounts[0], i).call();
-                            tokenIds.push(stake.tokenId);
-                            stakedStatus[stake.tokenId] = true; // Staked
+                            const tokenId = stake.tokenId;
+                            const owner = await nftContract.methods.ownerOf(tokenId).call();
+                            if (owner.toLowerCase() === contractAddress.toLowerCase()) {
+                                tokenIds.add(tokenId);
+                                stakedStatus[tokenId] = true;
+                            } else {
+                                console.log(`NFT ${tokenId} listed in stakes but not held by contract`);
+                            }
                             i++;
                         } catch (error) {
                             console.log("Finished fetching staked NFTs at index", i);
-                            break; // Exit when no more stakes are found
+                            break;
                         }
                     }
                 }
 
-                // Display NFTs
-                if (tokenIds.length === 0) {
+                nftGrid.innerHTML = '';
+                if (tokenIds.size === 0) {
                     nftGrid.innerHTML = '<p>No NFTs found in your wallet or staked.</p>';
                 } else {
                     for (const tokenId of tokenIds) {
@@ -475,16 +502,6 @@
             }
         }
 
-        async function checkIfStaked(tokenId) {
-            try {
-                const owner = await nftContract.methods.ownerOf(tokenId).call();
-                return owner.toLowerCase() === contractAddress.toLowerCase();
-            } catch (error) {
-                console.log("Check stake error:", error.message);
-                return false;
-            }
-        }
-
         async function stakeNFT(tokenId) {
             if (!accounts) {
                 updateStatus("Connect Coinbase Wallet to stake!");
@@ -492,6 +509,10 @@
             }
             try {
                 console.log(`Staking NFT ${tokenId}`);
+                const owner = await nftContract.methods.ownerOf(tokenId).call();
+                if (owner.toLowerCase() !== accounts[0].toLowerCase()) {
+                    throw new Error(`You do not own NFT ${tokenId}`);
+                }
                 const approved = await nftContract.methods.getApproved(tokenId).call();
                 if (approved.toLowerCase() !== contractAddress.toLowerCase()) {
                     updateStatus(`Approving NFT ${tokenId} for staking...`);
@@ -553,6 +574,10 @@
             }
             try {
                 console.log("Claiming rewards...");
+                const rewards = await contract.methods.calculateRewards(accounts[0]).call();
+                if (rewards === '0') {
+                    throw new Error("No rewards available to claim");
+                }
                 const gasEstimate = await contract.methods.claimRewards().estimateGas({ from: accounts[0] });
                 document.getElementById('gas').innerText = `${gasEstimate} (approx. $0.10)`;
                 await contract.methods.claimRewards().send({ from: accounts[0] });
