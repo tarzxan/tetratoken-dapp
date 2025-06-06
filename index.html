@@ -415,30 +415,59 @@
         async function loadUserNFTs() {
             try {
                 console.log("Loading NFTs for:", accounts ? accounts[0] : "no account");
-                const balance = await nftContract.methods.balanceOf(accounts[0] || "0x0000000000000000000000000000000000000000").call();
-                console.log("NFT balance:", balance);
                 const nftGrid = document.getElementById('nft-grid');
                 nftGrid.innerHTML = '';
-                for (let i = 0; i < balance; i++) {
-                    const tokenId = await nftContract.methods.tokenOfOwnerByIndex(accounts[0], i).call();
-                    const isStaked = await checkIfStaked(tokenId);
-                    console.log(`NFT ${tokenId}: ${isStaked ? 'Staked' : 'Not Staked'}`);
-                    const nftItem = document.createElement('div');
-                    nftItem.className = 'nft-item';
-                    nftItem.innerHTML = `
-                        <img src="https://via.placeholder.com/150?text=NFT+${tokenId}" alt="NFT ${tokenId}">
-                        <p>ID: ${tokenId}</p>
-                        <p>${isStaked ? 'Staked' : 'Not Staked'}</p>
-                        <div class="button-group">
-                            <button onclick="stakeNFT(${tokenId})" ${!accounts || isStaked ? 'disabled' : ''}>Stake</button>
-                            <button onclick="unstakeNFT(${tokenId})" ${!accounts || !isStaked ? 'disabled' : ''}>Unstake</button>
-                            <button onclick="claimRewards()" ${!accounts ? 'disabled' : ''}>Claim Rewards</button>
-                        </div>
-                    `;
-                    nftGrid.appendChild(nftItem);
+                let tokenIds = [];
+                let stakedStatus = {};
+
+                // Fetch NFTs in wallet
+                if (accounts) {
+                    const balance = await nftContract.methods.balanceOf(accounts[0]).call();
+                    console.log("Wallet NFT balance:", balance);
+                    for (let i = 0; i < balance; i++) {
+                        const tokenId = await nftContract.methods.tokenOfOwnerByIndex(accounts[0], i).call();
+                        tokenIds.push(tokenId);
+                        stakedStatus[tokenId] = false; // Not staked (in wallet)
+                    }
                 }
-                if (balance == 0) {
-                    nftGrid.innerHTML = '<p>No NFTs found in your wallet.</p>';
+
+                // Fetch staked NFTs from the stakes mapping
+                if (accounts) {
+                    let i = 0;
+                    while (true) {
+                        try {
+                            const stake = await contract.methods.stakes(accounts[0], i).call();
+                            tokenIds.push(stake.tokenId);
+                            stakedStatus[stake.tokenId] = true; // Staked
+                            i++;
+                        } catch (error) {
+                            console.log("Finished fetching staked NFTs at index", i);
+                            break; // Exit when no more stakes are found
+                        }
+                    }
+                }
+
+                // Display NFTs
+                if (tokenIds.length === 0) {
+                    nftGrid.innerHTML = '<p>No NFTs found in your wallet or staked.</p>';
+                } else {
+                    for (const tokenId of tokenIds) {
+                        const isStaked = stakedStatus[tokenId];
+                        console.log(`NFT ${tokenId}: ${isStaked ? 'Staked' : 'Not Staked'}`);
+                        const nftItem = document.createElement('div');
+                        nftItem.className = 'nft-item';
+                        nftItem.innerHTML = `
+                            <img src="https://via.placeholder.com/150?text=NFT+${tokenId}" alt="NFT ${tokenId}">
+                            <p>ID: ${tokenId}</p>
+                            <p>${isStaked ? 'Staked' : 'Not Staked'}</p>
+                            <div class="button-group">
+                                <button onclick="stakeNFT(${tokenId})" ${!accounts || isStaked ? 'disabled' : ''}>Stake</button>
+                                <button onclick="unstakeNFT(${tokenId})" ${!accounts || !isStaked ? 'disabled' : ''}>Unstake</button>
+                                <button onclick="claimRewards()" ${!accounts ? 'disabled' : ''}>Claim Rewards</button>
+                            </div>
+                        `;
+                        nftGrid.appendChild(nftItem);
+                    }
                 }
             } catch (error) {
                 console.log("NFT load error:", error.message);
