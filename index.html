@@ -294,15 +294,9 @@
             },
             {
                 "inputs": [
-                    "internalType": "address",
-                    "name": "owner",
-                    "type": "address"
-                },
-                {
-                    "internalType": "uint256",
-                    "name": "index",
-                    "type": "uint256"
-                },
+                    {"internalType": "address", "name": "owner", "type": "address"},
+                    {"internalType": "uint256", "name": "index", "type": "uint256"}
+                ],
                 "name": "tokenOfOwnerByIndex",
                 "outputs": [
                     {"internalType": "uint256", "name": "", "type": "uint256"}
@@ -312,31 +306,19 @@
             },
             {
                 "inputs": [
-                    "internalType": "uint256",
-                    "name": "tokenId",
-                    "type": "uint256"
-                },
+                    {"internalType": "uint256", "name": "tokenId", "type": "uint256"}
+                ],
                 "name": "ownerOf",
                 "outputs": [
-                    "internalType": "address",
-                    "name": "",
-                    "type": "address"
+                    {"internalType": "address", "name": "", "type": "address"}
                 ],
                 "stateMutability": "view",
                 "type": "function"
             },
             {
                 "inputs": [
-                    {
-                        "internalType": "address",
-                        "name": "spender",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "tokenId",
-                        "type": "uint256"
-                    }
+                    {"internalType": "address", "name": "spender", "type": "address"},
+                    {"internalType": "uint256", "name": "tokenId", "type": "uint256"}
                 ],
                 "name": "approve",
                 "outputs": [],
@@ -345,10 +327,8 @@
             },
             {
                 "inputs": [
-                    "internalType": "uint256",
-                    "name": "tokenId",
-                    "type": "uint256"
-                },
+                    {"internalType": "uint256", "name": "tokenId", "type": "uint256"}
+                ],
                 "name": "getApproved",
                 "outputs": [
                     {"internalType": "address", "name": "", "type": "address"}
@@ -359,33 +339,37 @@
         ];
 
         async function connectWallet() {
-            console.log("Attempting to connect wallet...");
+            // Debug: Confirm the function is called
+            console.log("connectWallet function called at", new Date().toISOString());
+            alert("Connect Wallet button clicked! If nothing happens after this, check the browser console for errors.");
+
             let provider;
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            console.log("window.ethereum:", window.ethereum);
-
-            if (window.ethereum && (window.ethereum.isCoinbaseWallet || window.ethereum.isMetaMask)) {
-                provider = window.ethereum;
-                console.log("Detected wallet provider:", provider.isCoinbaseWallet ? "Coinbase" : "Other");
-            } else {
-                console.log("No window.ethereum, trying Coinbase Wallet SDK...");
-                try {
-                    const CoinbaseWalletSDK = window.CoinbaseWalletSDK;
-                    const sdk = new CoinbaseWalletSDK({
-                        appName: "TetraToken Staking",
-                        chainIds: [8453]
-                    });
-                    provider = sdk.makeWeb3Provider("https://mainnet.base.org", 8453);
-                    console.log("SDK provider initialized");
-                } catch (e) {
-                    console.log("SDK failed:", e.message);
-                    provider = new Web3.providers.HttpProvider("https://mainnet.base.org");
-                    updateStatus("Using public RPC (read-only). Install or enable Coinbase Wallet.");
-                    console.log("Fallback to public RPC");
-                }
-            }
-
             try {
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                console.log("window.ethereum:", window.ethereum);
+
+                if (window.ethereum && (window.ethereum.isCoinbaseWallet || window.ethereum.isMetaMask)) {
+                    provider = window.ethereum;
+                    console.log("Detected wallet provider:", provider.isCoinbaseWallet ? "Coinbase" : "MetaMask");
+                } else {
+                    console.log("No window.ethereum, trying Coinbase Wallet SDK...");
+                    try {
+                        const CoinbaseWalletSDK = window.CoinbaseWalletSDK;
+                        const sdk = new CoinbaseWalletSDK({
+                            appName: "TetraToken Staking",
+                            chainIds: [8453]
+                        });
+                        provider = sdk.makeWeb3Provider("https://mainnet.base.org", 8453);
+                        console.log("SDK provider initialized");
+                    } catch (e) {
+                        console.log("SDK failed:", e.message);
+                        provider = new Web3.providers.HttpProvider("https://mainnet.base.org");
+                        updateStatus("Using public RPC (read-only). Install or enable Coinbase Wallet or MetaMask.");
+                        console.log("Fallback to public RPC");
+                        return; // Exit early since we’re in read-only mode
+                    }
+                }
+
                 web3 = new Web3(provider);
                 if (provider.request) {
                     console.log("Requesting accounts...");
@@ -433,12 +417,9 @@
 
         async function loadUserNFTs() {
             try {
-                // Debug confirmation
                 console.log("Running updated loadUserNFTs with THREE buttons per NFT");
-                alert("This version should show THREE buttons per NFT item (Stake, Unstake, Claim Rewards). If you see only one button, please check the code version or clear your browser cache.");
-
                 console.log("Loading NFTs for:", accounts ? accounts[0] : "no account");
-                const nftGrid = document.getElementById('nft-games');
+                const nftGrid = document.getElementById('nft-grid'); // Fixed typo: 'nft-games' to 'nft-grid'
                 nftGrid.innerHTML = '<p>Loading NFTs...</p>';
                 let tokenIds = new Set();
                 let stakedStatus = {};
