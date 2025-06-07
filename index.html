@@ -11,7 +11,7 @@
     <!-- web3.js via CDN -->
     <script src="https://cdn.jsdelivr.net/npm/web3@1.8.0/dist/web3.min.js"></script>
     <!-- WalletConnect v2 SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@walletconnect/ethereum-provider@2.10.0/dist/umd/index.min.js"></script>
     <!-- Favicon to prevent 404 -->
     <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAFUlEQVR4nGP8//8/A8YYo5GMkYxRAwAWUAu6H5oA7gAAAABJRU5ErkJggg==">
     <style>
@@ -209,30 +209,20 @@
         if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             html.classList.add('dark');
         } else {
-            html.classList.remove('dark'));
+            html.classList.remove('dark');
         }
 
         themeToggle.addEventListener('click', () => {
             html.classList.toggle('dark');
-            localStorage.setItem('theme', html.classList.contains('dark') ? 'block' : 'none');
+            localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
         });
 
         // DOM elements
         const connectWalletBtn = document.getElementById('connectWallet');
-        const walletModal = document.getElementByIdwalletModal');
+        const walletModal = document.getElementById('walletModal');
         const closeModal = document.getElementById('closeModal');
         const browserWalletBtn = document.getElementById('browserWalletBtn');
         const walletConnectBtn = document.getElementById('walletConnectBtn');
-        const walletAddress = document.getElementById('walletAddress');
-        const txStatusModal = document.getElementById('txStatusModal');
-        const closeTxStatusModal = document.getElementById('closeTxStatusModal');
-        const closeTxStatusBtn = document.getElementById('closeTxStatusBtn');
-        const txStatusTitle = document.getElementById('txStatusTitle');
-        const txStatusMessage = document.getElementById('txStatusMessage');
-        const txHashLink = document.getElementById('txHashLink');
-        const txSpinner = document.getElementById('txSpinner');
-        const txSuccessIcon = document.getElementById('txSuccessIcon');
-        const txErrorIcon = document.getElementById('txErrorIcon');
         const networkInfo = document.getElementById('networkInfo');
         const stakeForm = document.getElementById('stakeForm');
         const unstakeForm = document.getElementById('unstakeForm');
@@ -282,7 +272,7 @@
                 ],
                 "name": "depositRewards",
                 "outputs": [],
-                "stateMutability":robot not payable,
+                "stateMutability": "nonpayable",
                 "type": "function"
             },
             {
@@ -477,8 +467,8 @@
                 "name": "rewardToken",
                 "outputs": [
                     {
-                        "internalType": rewardToken,
-                        "name": "contract IERC20",
+                        "internalType": "contract IERC20",
+                        "name": "",
                         "type": "address"
                     }
                 ],
@@ -536,17 +526,27 @@
         // Initialize WalletConnect
         async function initWalletConnect() {
             console.log('Initializing WalletConnect...');
-            walletConnectProvider = new WalletConnectProvider({
-                rpc: {
-                    8453: "https://mainnet.infura.io/v3/YOUR_INFURA_KEY", // Replace with your Infura key
-                    84531: "https://sepolia.infura.io/v3/YOUR_INFURA_KEY"
-                },
-                qrcode: true
-            });
+            try {
+                walletConnectProvider = await EthereumProvider.init({
+                    projectId: 'YOUR_WALLET_CONNECT_PROJECT_ID', // Replace with your WalletConnect Project ID
+                    chains: [8453], // Base mainnet
+                    optionalChains: [84531], // Base Sepolia
+                    showQrModal: true,
+                    metadata: {
+                        name: 'NFT Staking Platform',
+                        description: 'Stake NFTs on Base blockchain',
+                        url: window.location.origin,
+                        icons: ['https://base.org/images/base-icon.svg']
+                    }
+                });
+            } catch (error) {
+                console.error('WalletConnect initialization failed:', error);
+            }
         }
 
         // Initialize Web3
         async function initWeb3(provider) {
+            console.log('Initializing Web3...');
             try {
                 web3 = new Web3(provider);
                 accounts = await web3.eth.getAccounts();
@@ -556,7 +556,7 @@
                     try {
                         await provider.request({
                             method: 'wallet_switchEthereumChain',
-                            params: [{ chainId: '0x213e' }],
+                            params: [{ chainId: '0x213e' }], // Base mainnet
                         });
                         chainId = 8453;
                         networkName = 'Base Mainnet';
@@ -566,7 +566,7 @@
                         return false;
                     }
                 }
-                stakingContract = new web3.eth.Contract(STAKING_ABI, tokenId);
+                stakingContract = new web3.eth.Contract(STAKING_ABI, STAKING_CONTRACT_ADDRESS);
                 return true;
             } catch (error) {
                 console.error('Web3 initialization error:', error);
@@ -580,10 +580,11 @@
             walletSpinner.style.display = 'inline-block';
             walletBtnText.textContent = 'Connecting...';
             try {
-                if (window.ethereum) {
-                    if (await initWeb3(window.ethereum)) {
-                        throw new Error('Failed to initialize Web3');
-                    }
+                if (!window.ethereum) {
+                    throw new Error('No wallet provider detected. Please install MetaMask or another wallet.');
+                }
+                await window.ethereum.request({ method: 'eth_requestAccounts' });
+                if (await initWeb3(window.ethereum)) {
                     window.ethereum.on('accountsChanged', () => {
                         initWallet();
                         updateUI();
@@ -595,15 +596,15 @@
                     walletModal.style.display = 'none';
                     updateUI();
                 } else {
-                    throw new Error('No wallet provider detected');
+                    throw new Error('Failed to initialize Web3');
                 }
             } catch (error) {
                 alert(`Error connecting wallet: ${error.message}`);
-                console.error(error);
+                console.error('Browser wallet connection error:', error);
             } finally {
                 walletSpinner.style.display = 'none';
                 walletBtnText.textContent = accounts.length > 0 ? 
-                    ${accounts[0].substring(0, 6)}...${accounts[0].substring(38)} :
+                    `${accounts[0].substring(0, 6)}...${accounts[0].substring(38)}` :
                     'Connect Wallet';
             }
         }
@@ -611,10 +612,10 @@
         // Connect WalletConnect
         async function connectWalletConnect() {
             console.log('Connecting WalletConnect...');
-            walletSpinner.style.display = 'block';
+            walletSpinner.style.display = 'inline-block';
             walletBtnText.textContent = 'Connecting...';
             try {
-                await walletConnectProvider.enable();
+                await walletConnectProvider.connect();
                 if (!await initWeb3(walletConnectProvider)) {
                     throw new Error('Failed to initialize Web3 with WalletConnect');
                 }
@@ -634,20 +635,20 @@
                 updateUI();
             } catch (error) {
                 alert(`Error connecting WalletConnect: ${error.message}`);
-                console.error(error);
+                console.error('WalletConnect connection error:', error);
             } finally {
                 walletSpinner.style.display = 'none';
                 walletBtnText.textContent = accounts.length > 0 ? 
-                    ${accounts[0].substring(0, 6)}...${accounts[0].substring(38)} :
+                    `${accounts[0].substring(0, 6)}...${accounts[0].substring(38)}` :
                     'Connect Wallet';
             }
         }
 
         // Update UI
         async function updateUI() {
+            console.log('Updating UI...');
             try {
                 if (accounts.length > 0) {
-                    walletAddress.textContent = accounts[0];
                     connectWalletBtn.classList.add('bg-green-500', 'hover:bg-green-600');
                     connectWalletBtn.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
                     walletBtnText.textContent = `${accounts[0].substring(0, 6)}...${accounts[0].substring(38)}`;
@@ -658,7 +659,6 @@
                     rewardTokenElement.textContent = await stakingContract.methods.rewardToken().call();
                     await fetchStakes();
                 } else {
-                    walletAddress.textContent = 'Not connected';
                     connectWalletBtn.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
                     connectWalletBtn.classList.remove('bg-green-500', 'hover:bg-green-600');
                     walletBtnText.textContent = 'Connect Wallet';
@@ -674,7 +674,7 @@
             }
         }
 
-        // Fetch staked NFTs and rewards
+        // Fetch staked NFTs
         async function fetchStakes() {
             try {
                 const userAddress = accounts[0];
@@ -692,7 +692,6 @@
                         break;
                     }
                 }
-                const rewards = await stakingContract.methods.calculateRewards(userAddress).call();
                 stakesList.innerHTML = stakes.length === 0 
                     ? '<p class="text-sm text-gray-500 dark:text-gray-400 text-center">No staked NFTs</p>'
                     : stakes.map(stake => `
@@ -890,6 +889,16 @@
 
         window.addEventListener('load', () => {
             console.log('Window loaded, initializing...');
+            if (!window.Web3) {
+                console.error('web3.js not loaded');
+                alert('Failed to load web3.js. Please check your internet connection.');
+                return;
+            }
+            if (!window.EthereumProvider) {
+                console.error('WalletConnect SDK not loaded');
+                alert('Failed to load WalletConnect SDK. Please check your internet connection.');
+                return;
+            }
             initWallet();
         });
     </script>
