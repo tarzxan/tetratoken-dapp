@@ -5,11 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NFT Staking Platform | Base Blockchain</title>
     <!-- Tailwind CSS via CDN (for testing; use local build for production) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- ethers.js via CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.0.0/ethers.umd.min.js"></script>
+    <!-- ethers.js via CDN with local fallback -->
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.0.0/dist/ethers.umd.min.js"></script>
+    <script>
+        // Fallback to local ethers.js if CDN fails
+        if (typeof ethers === 'undefined') {
+            document.write('<script src="lib/ethers.umd.min.js"><\/script>');
+        }
+    </script>
     <!-- Favicon to prevent 404 -->
     <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAFUlEQVR4nGP8//8/A8YYo5GMkYxRAwAWUAu6H5oA7gAAAABJRU5ErkJggg==">
     <style>
@@ -302,374 +308,625 @@
     </footer>
 
     <script defer>
-        // Check if ethers.js is loaded
-        if (typeof ethers === 'undefined') {
-            console.error('ethers.js failed to load. Please ensure the CDN is accessible or use a local copy.');
-            alert('Failed to load required library (ethers.js). Please check your internet connection or try a different browser.');
-        }
-
-        // Contract Address
-        const contractAddress = "0x56baF3C662adf4a0c8981E0AA8A5797fE6E72FE6";
-
-        // Contract ABI (exact as provided)
-        const stakingContractABI = [
-            {
-                "inputs": [],
-                "name": "claimRewards",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {
-                        "internalType": "uint256",
-                        "name": "amount",
-                        "type": "uint256"
-                    }
-                ],
-                "name": "depositRewards",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {
-                        "internalType": "address",
-                        "name": "_nftContract",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "address",
-                        "name": "_rewardToken",
-                        "type": "address"
-                    }
-                ],
-                "stateMutability": "nonpayable",
-                "type": "constructor"
-            },
-            {
-                "inputs": [
-                    {
-                        "internalType": "address",
-                        "name": "owner",
-                        "type": "address"
-                    }
-                ],
-                "name": "OwnableInvalidOwner",
-                "type": "error"
-            },
-            {
-                "inputs": [
-                    {
-                        "internalType": "address",
-                        "name": "account",
-                        "type": "address"
-                    }
-                ],
-                "name": "OwnableUnauthorizedAccount",
-                "type": "error"
-            },
-            {
-                "anonymous": false,
-                "inputs": [
-                    {
-                        "indexed": true,
-                        "internalType": "address",
-                        "name": "previousOwner",
-                        "type": "address"
-                    },
-                    {
-                        "indexed": true,
-                        "internalType": "address",
-                        "name": "newOwner",
-                        "type": "address"
-                    }
-                ],
-                "name": "OwnershipTransferred",
-                "type": "event"
-            },
-            {
-                "inputs": [],
-                "name": "renounceOwnership",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {
-                        "internalType": "uint256",
-                        "name": "tokenId",
-                        "type": "uint256"
-                    }
-                ],
-                "name": "stake",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {
-                        "internalType": "address",
-                        "name": "newOwner",
-                        "type": "address"
-                    }
-                ],
-                "name": "transferOwnership",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {
-                        "internalType": "uint256",
-                        "name": "tokenId",
-                        "type": "uint256"
-                    }
-                ],
-                "name": "unstake",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {
-                        "internalType": "address",
-                        "name": "user",
-                        "type": "address"
-                    }
-                ],
-                "name": "calculateRewards",
-                "outputs": [
-                    {
-                        "internalType": "uint256",
-                        "name": "",
-                        "type": "uint256"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "CIRCULATION_THRESHOLD",
-                "outputs": [
-                    {
-                        "internalType": "uint256",
-                        "name": "",
-                        "type": "uint256"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "nftContract",
-                "outputs": [
-                    {
-                        "internalType": "contract IERC721",
-                        "name": "",
-                        "type": "address"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "owner",
-                "outputs": [
-                    {
-                        "internalType": "address",
-                        "name": "",
-                        "type": "address"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "rewardRate",
-                "outputs": [
-                    {
-                        "internalType": "uint256",
-                        "name": "",
-                        "type": "uint256"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "rewardReduced",
-                "outputs": [
-                    {
-                        "internalType": "bool",
-                        "name": "",
-                        "type": "bool"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "rewardToken",
-                "outputs": [
-                    {
-                        "internalType": "contract IERC20",
-                        "name": "",
-                        "type": "address"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {
-                        "internalType": "address",
-                        "name": "",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "",
-                        "type": "uint256"
-                    }
-                ],
-                "name": "stakes",
-                "outputs": [
-                    {
-                        "internalType": "uint256",
-                        "name": "tokenId",
-                        "type": "uint256"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "stakedAt",
-                        "type": "uint256"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "TOTAL_SUPPLY",
-                "outputs": [
-                    {
-                        "internalType": "uint256",
-                        "name": "",
-                        "type": "uint256"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            }
-        ];
-
-        // DOM Elements
-        const connectWalletBtn = document.getElementById('connectWallet');
-        const connectWalletBtn2 = document.getElementById('connectWallet2');
-        const disconnectWalletBtn = document.getElementById('disconnectWallet');
-        const walletInfo = document.getElementById('walletInfo');
-        const walletAddress = document.getElementById('walletAddress');
-        const stakedCount = document.getElementById('stakedCount');
-        const pendingRewards = document.getElementById('pendingRewards');
-        const stakeBtn = document.getElementById('stakeBtn');
-        const unstakeBtn = document.getElementById('unstakeBtn');
-        const claimRewardsBtn = document.getElementById('claimRewardsBtn');
-        const stakeTokenId = document.getElementById('stakeTokenId');
-        const unstakeTokenId = document.getElementById('unstakeTokenId');
-        const transactionModal = document.getElementById('transactionModal');
-        const modalTitle = document.getElementById('modalTitle');
-        const modalText = document.getElementById('modalText');
-        const modalIcon = document.getElementById('modalIcon');
-        const transactionHash = document.getElementById('transactionHash');
-        const closeModal = document.getElementById('closeModal');
-        const nftContractElement = document.getElementById('nftContract');
-        const rewardTokenElement = document.getElementById('rewardToken');
-        const rewardRateElement = document.getElementById('rewardRate');
-
-        let provider, signer, stakingContract;
-
-        // Initialize contract
-        async function initializeContract() {
-            console.log('Initializing contract...');
-            provider = new ethers.providers.Web3Provider(window.ethereum);
-            signer = provider.getSigner();
-            stakingContract = new ethers.Contract(contractAddress, stakingContractABI, signer);
-        }
-
-        // Update UI functions
-        function updateStakedCount(count) {
-            stakedCount.textContent = count;
-        }
-
-        function updatePendingRewards(amount) {
-            pendingRewards.textContent = Number(amount).toLocaleString(undefined, { maximumFractionDigits: 2 }) + " THC";
-        }
-
-        function populateUnstakeDropdown(nftIds) {
-            unstakeTokenId.innerHTML = '<option value="" disabled selected>Select NFT to unstake</option>';
-            nftIds.forEach(id => {
-                const option = document.createElement('option');
-                option.value = id;
-                option.textContent = "NFT #" + id;
-                unstakeTokenId.appendChild(option);
-            });
-        }
-
-        // Fetch user stakes (since stakes mapping isn't directly iterable)
-        async function getUserStakes(userAddress) {
-            console.log('Fetching stakes for:', userAddress);
-            const stakes = [];
-            let i = 0;
-            try {
-                while (true) {
-                    const stake = await stakingContract.stakes(userAddress, i);
-                    if (stake.tokenId.toString() !== "0" || stake.stakedAt.toString() !== "0") {
-                        stakes.push({
-                            tokenId: stake.tokenId.toString(),
-                            stakedAt: stake.stakedAt.toString()
-                        });
-                    }
-                    i++;
-                }
-            } catch (error) {
-                console.log('End of stakes reached at index:', i);
-            }
-            return stakes;
-        }
-
-        // Wallet connection
-        async function connectWallet() {
-            console.log('Connect Wallet button clicked');
-            if (!window.ethereum) {
-                alert("Please install MetaMask, Coinbase Wallet, or another compatible wallet. Visit https://metamask.io or https://www.coinbase.com/wallet to get started.");
-                console.error('No wallet provider detected');
-                return;
-            }
+        window.onload = function() {
+            // Check if ethers.js is loaded
             if (typeof ethers === 'undefined') {
-                alert('Failed to load required library (ethers.js). Please check your internet connection or try a different browser.');
-                console.error('ethers.js is not defined');
+                console.error('ethers.js failed to load. Ensure the CDN is accessible or the local file (lib/ethers.umd.min.js) is present.');
+                alert('Failed to load required library (ethers.js). Please check your internet connection, ensure the local ethers.js file is present, or try a different browser.');
                 return;
             }
-            try {
-                console.log('Requesting wallet accounts...');
+
+            // Contract Address
+            const contractAddress = "0x56baF3C662adf4a0c8981E0AA8A5797fE6E72FE6";
+
+            // Contract ABI (exact as provided)
+            const stakingContractABI = [
+                {
+                    "inputs": [],
+                    "name": "claimRewards",
+                    "outputs": [],
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "amount",
+                            "type": "uint256"
+                        }
+                    ],
+                    "name": "depositRewards",
+                    "outputs": [],
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "address",
+                            "name": "_nftContract",
+                            "type": "address"
+                        },
+                        {
+                            "internalType": "address",
+                            "name": "_rewardToken",
+                            "type": "address"
+                        }
+                    ],
+                    "stateMutability": "nonpayable",
+                    "type": "constructor"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "address",
+                            "name": "owner",
+                            "type": "address"
+                        }
+                    ],
+                    "name": "OwnableInvalidOwner",
+                    "type": "error"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "address",
+                            "name": "account",
+                            "type": "address"
+                        }
+                    ],
+                    "name": "OwnableUnauthorizedAccount",
+                    "type": "error"
+                },
+                {
+                    "anonymous": false,
+                    "inputs": [
+                        {
+                            "indexed": true,
+                            "internalType": "address",
+                            "name": "previousOwner",
+                            "type": "address"
+                        },
+                        {
+                            "indexed": true,
+                            "internalType": "address",
+                            "name": "newOwner",
+                            "type": "address"
+                        }
+                    ],
+                    "name": "OwnershipTransferred",
+                    "type": "event"
+                },
+                {
+                    "inputs": [],
+                    "name": "renounceOwnership",
+                    "outputs": [],
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "tokenId",
+                            "type": "uint256"
+                        }
+                    ],
+                    "name": "stake",
+                    "outputs": [],
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "address",
+                            "name": "newOwner",
+                            "type": "address"
+                        }
+                    ],
+                    "name": "transferOwnership",
+                    "outputs": [],
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "tokenId",
+                            "type": "uint256"
+                        }
+                    ],
+                    "name": "unstake",
+                    "outputs": [],
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "address",
+                            "name": "user",
+                            "type": "address"
+                        }
+                    ],
+                    "name": "calculateRewards",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "inputs": [],
+                    "name": "CIRCULATION_THRESHOLD",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "inputs": [],
+                    "name": "nftContract",
+                    "outputs": [
+                        {
+                            "internalType": "contract IERC721",
+                            "name": "",
+                            "type": "address"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "inputs": [],
+                    "name": "owner",
+                    "outputs": [
+                        {
+                            "internalType": "address",
+                            "name": "",
+                            "type": "address"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "inputs": [],
+                    "name": "rewardRate",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "inputs": [],
+                    "name": "rewardReduced",
+                    "outputs": [
+                        {
+                            "internalType": "bool",
+                            "name": "",
+                            "type": "bool"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "inputs": [],
+                    "name": "rewardToken",
+                    "outputs": [
+                        {
+                            "internalType": "contract IERC20",
+                            "name": "",
+                            "type": "address"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "address",
+                            "name": "",
+                            "type": "address"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ],
+                    "name": "stakes",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "tokenId",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "stakedAt",
+                            "type": "uint256"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "inputs": [],
+                    "name": "TOTAL_SUPPLY",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function"
+                }
+            ];
+
+            // DOM Elements
+            const connectWalletBtn = document.getElementById('connectWallet');
+            const connectWalletBtn2 = document.getElementById('connectWallet2');
+            const disconnectWalletBtn = document.getElementById('disconnectWallet');
+            const walletInfo = document.getElementById('walletInfo');
+            const walletAddress = document.getElementById('walletAddress');
+            const stakedCount = document.getElementById('stakedCount');
+            const pendingRewards = document.getElementById('pendingRewards');
+            const stakeBtn = document.getElementById('stakeBtn');
+            const unstakeBtn = document.getElementById('unstakeBtn');
+            const claimRewardsBtn = document.getElementById('claimRewardsBtn');
+            const stakeTokenId = document.getElementById('stakeTokenId');
+            const unstakeTokenId = document.getElementById('unstakeTokenId');
+            const transactionModal = document.getElementById('transactionModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalText = document.getElementById('modalText');
+            const modalIcon = document.getElementById('modalIcon');
+            const transactionHash = document.getElementById('transactionHash');
+            const closeModal = document.getElementById('closeModal');
+            const nftContractElement = document.getElementById('nftContract');
+            const rewardTokenElement = document.getElementById('rewardToken');
+            const rewardRateElement = document.getElementById('rewardRate');
+
+            let provider, signer, stakingContract;
+
+            // Initialize contract
+            async function initializeContract() {
+                console.log('Initializing contract...');
                 provider = new ethers.providers.Web3Provider(window.ethereum);
-                await provider.send("eth_requestAccounts", []);
                 signer = provider.getSigner();
-                const address = await signer.getAddress();
-                console.log('Connected wallet address:', address);
-                const network = await provider.getNetwork();
-                console.log('Current network chain ID:', network.chainId);
+                stakingContract = new ethers.Contract(contractAddress, stakingContractABI, signer);
+            }
+
+            // Update UI functions
+            function updateStakedCount(count) {
+                stakedCount.textContent = count;
+            }
+
+            function updatePendingRewards(amount) {
+                pendingRewards.textContent = Number(amount).toLocaleString(undefined, { maximumFractionDigits: 2 }) + " THC";
+            }
+
+            function populateUnstakeDropdown(nftIds) {
+                unstakeTokenId.innerHTML = '<option value="" disabled selected>Select NFT to unstake</option>';
+                nftIds.forEach(id => {
+                    const option = document.createElement('option');
+                    option.value = id;
+                    option.textContent = "NFT #" + id;
+                    unstakeTokenId.appendChild(option);
+                });
+            }
+
+            // Fetch user stakes (since stakes mapping isn't directly iterable)
+            async function getUserStakes(userAddress) {
+                console.log('Fetching stakes for:', userAddress);
+                const stakes = [];
+                let i = 0;
+                try {
+                    while (true) {
+                        const stake = await stakingContract.stakes(userAddress, i);
+                        if (stake.tokenId.toString() !== "0" || stake.stakedAt.toString() !== "0") {
+                            stakes.push({
+                                tokenId: stake.tokenId.toString(),
+                                stakedAt: stake.stakedAt.toString()
+                            });
+                        }
+                        i++;
+                    }
+                } catch (error) {
+                    console.log('End of stakes reached at index:', i);
+                }
+                return stakes;
+            }
+
+            // Wallet connection
+            async function connectWallet() {
+                console.log('Connect Wallet button clicked');
+                if (!window.ethereum) {
+                    alert("Please install MetaMask, Coinbase Wallet, or another compatible wallet. Visit https://metamask.io or https://www.coinbase.com/wallet to get started.");
+                    console.error('No wallet provider detected');
+                    return;
+                }
+                try {
+                    console.log('Requesting wallet accounts...');
+                    provider = new ethers.providers.Web3Provider(window.ethereum);
+                    await provider.send("eth_requestAccounts", []);
+                    signer = provider.getSigner();
+                    const address = await signer.getAddress();
+                    console.log('Connected wallet address:', address);
+                    const network = await provider.getNetwork();
+                    console.log('Current network chain ID:', network.chainId);
+                    if (network.chainId !== 8453) { // Base mainnet
+                        // For Base Sepolia testing, change to 84531 and chainId to '0x213f'
+                        try {
+                            console.log('Switching to Base mainnet...');
+                            await window.ethereum.request({
+                                method: 'wallet_switchEthereumChain',
+                                params: [{ chainId: '0x213e' }], // Base mainnet
+                            });
+                        } catch (error) {
+                            alert("Please switch to the Base network in your wallet.");
+                            console.error('Network switch failed:', error);
+                            return;
+                        }
+                    }
+                    walletInfo.classList.remove('hidden');
+                    walletAddress.textContent = address;
+                    connectWalletBtn.textContent = "Connected";
+                    connectWalletBtn2.textContent = "Connected";
+                    connectWalletBtn.classList.remove('bg-blue-600');
+                    connectWalletBtn.classList.add('bg-green-500');
+                    connectWalletBtn2.classList.remove('bg-blue-600');
+                    connectWalletBtn2.classList.add('bg-green-500');
+                    stakeBtn.disabled = false;
+                    unstakeBtn.disabled = false;
+                    claimRewardsBtn.disabled = false;
+                    await initializeContract();
+                    await initUI();
+                    alert("Wallet connected successfully!");
+                } catch (error) {
+                    console.error("Wallet connection failed:", error);
+                    updateModalError("Connection Failed", `Error: ${error.message}`);
+                }
+            }
+
+            // Disconnect wallet
+            disconnectWalletBtn.addEventListener('click', () => {
+                console.log('Disconnect Wallet clicked');
+                walletInfo.classList.add('hidden');
+                connectWalletBtn.textContent = "Connect Wallet";
+                connectWalletBtn2.textContent = "Connect Wallet";
+                connectWalletBtn.classList.remove('bg-green-500');
+                connectWalletBtn.classList.add('bg-blue-600');
+                connectWalletBtn2.classList.remove('bg-green-500');
+                connectWalletBtn2.classList.add('bg-blue-600');
+                stakeBtn.disabled = true;
+                unstakeBtn.disabled = true;
+                claimRewardsBtn.disabled = true;
+                updateStakedCount(0);
+                updatePendingRewards(0);
+                populateUnstakeDropdown([]);
+                nftContractElement.textContent = "Not connected";
+                rewardTokenElement.textContent = "Not connected";
+                rewardRateElement.textContent = "Not connected";
+            });
+
+            // Stake NFT
+            stakeBtn.addEventListener('click', async () => {
+                console.log('Stake button clicked');
+                const tokenId = parseInt(stakeTokenId.value);
+                if (isNaN(tokenId) || tokenId < 0) {
+                    alert("Please enter a valid NFT ID");
+                    console.error('Invalid NFT ID:', stakeTokenId.value);
+                    return;
+                }
+                stakeBtn.disabled = true;
+                stakeBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Staking...';
+                showModal("Staking NFT", `Staking NFT #${tokenId}...`);
+                try {
+                    const nftContractAddress = await stakingContract.nftContract();
+                    console.log('NFT contract address:', nftContractAddress);
+                    const nftContract = new ethers.Contract(nftContractAddress, [
+                        "function ownerOf(uint256 tokenId) view returns (address)",
+                        "function approve(address to, uint256 tokenId) public",
+                        "function getApproved(uint256 tokenId) view returns (address)"
+                    ], signer);
+                    const owner = await nftContract.ownerOf(tokenId);
+                    const userAddress = await signer.getAddress();
+                    console.log('NFT owner:', owner, 'User address:', userAddress);
+                    if (owner.toLowerCase() !== userAddress.toLowerCase()) {
+                        throw new Error("You do not own this NFT");
+                    }
+                    const approved = await nftContract.getApproved(tokenId);
+                    console.log('Approved address for NFT:', approved);
+                    if (approved.toLowerCase() !== contractAddress.toLowerCase()) {
+                        console.log('Approving NFT for staking...');
+                        const approveTx = await nftContract.approve(contractAddress, tokenId);
+                        await approveTx.wait();
+                        showModal("Approving NFT", `Approval for NFT #${tokenId} confirmed. Now staking...`);
+                    }
+                    console.log('Staking NFT:', tokenId);
+                    const tx = await stakingContract.stake(tokenId);
+                    await tx.wait();
+                    console.log('Stake transaction confirmed:', tx.hash);
+                    const userStakes = await getUserStakes(userAddress);
+                    updateStakedCount(userStakes.length);
+                    populateUnstakeDropdown(userStakes.map(stake => stake.tokenId));
+                    updateModalSuccess("NFT Staked", `NFT #${tokenId} has been successfully staked!`, tx.hash);
+                    stakeTokenId.value = '';
+                } catch (error) {
+                    let errorMessage = error.message;
+                    if (errorMessage.includes("Not owner")) {
+                        errorMessage = "You do not own this NFT or it doesn't exist";
+                    } else if (errorMessage.includes("transfer caller is not owner nor approved")) {
+                        errorMessage = "NFT not approved for staking";
+                    }
+                    console.error('Staking failed:', error);
+                    updateModalError("Staking Failed", `Error: ${errorMessage}`);
+                } finally {
+                    stakeBtn.disabled = false;
+                    stakeBtn.innerHTML = 'Stake NFT';
+                }
+            });
+
+            // Unstake NFT
+            unstakeBtn.addEventListener('click', async () => {
+                console.log('Unstake button clicked');
+                const tokenId = unstakeTokenId.value;
+                if (!tokenId) {
+                    alert("Please select an NFT to unstake");
+                    console.error('No NFT selected for unstaking');
+                    return;
+                }
+                unstakeBtn.disabled = true;
+                unstakeBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Unstaking...';
+                showModal("Unstaking NFT", `Unstaking NFT #${tokenId}...`);
+                try {
+                    console.log('Unstaking NFT:', tokenId);
+                    const tx = await stakingContract.unstake(tokenId);
+                    await tx.wait();
+                    console.log('Unstake transaction confirmed:', tx.hash);
+                    const userAddress = await signer.getAddress();
+                    const userStakes = await getUserStakes(userAddress);
+                    updateStakedCount(userStakes.length);
+                    populateUnstakeDropdown(userStakes.map(stake => stake.tokenId));
+                    updateModalSuccess("NFT Unstaked", `NFT #${tokenId} has been successfully unstaked!`, tx.hash);
+                } catch (error) {
+                    let errorMessage = error.message;
+                    if (errorMessage.includes("revert")) {
+                        errorMessage = "NFT not staked or already unstaked";
+                    }
+                    console.error('Unstaking failed:', error);
+                    updateModalError("Unstaking Failed", `Error: ${errorMessage}`);
+                } finally {
+                    unstakeBtn.disabled = false;
+                    unstakeBtn.innerHTML = 'Unstake NFT';
+                }
+            });
+
+            // Claim Rewards
+            claimRewardsBtn.addEventListener('click', async () => {
+                console.log('Claim Rewards button clicked');
+                claimRewardsBtn.disabled = true;
+                claimRewardsBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Claiming...';
+                showModal("Claiming Rewards", "Processing your reward claim...");
+                try {
+                    console.log('Claiming rewards...');
+                    const tx = await stakingContract.claimRewards();
+                    await tx.wait();
+                    console.log('Claim transaction confirmed:', tx.hash);
+                    const userAddress = await signer.getAddress();
+                    const rewards = await stakingContract.calculateRewards(userAddress);
+                    updatePendingRewards(ethers.utils.formatUnits(rewards, 18));
+                    updateModalSuccess("Rewards Claimed", `Successfully claimed rewards!`, tx.hash);
+                } catch (error) {
+                    let errorMessage = error.message;
+                    if (errorMessage.includes("No rewards")) {
+                        errorMessage = "No rewards available to claim";
+                    } else if (errorMessage.includes("Insufficient reward balance")) {
+                        errorMessage = "Contract has insufficient reward tokens";
+                    }
+                    console.error('Claim failed:', error);
+                    updateModalError("Claim Failed", `Error: ${errorMessage}`);
+                } finally {
+                    claimRewardsBtn.disabled = false;
+                    claimRewardsBtn.innerHTML = '<i class="fas fa-coins mr-2"></i> Claim Rewards';
+                }
+            });
+
+            // Modal functions
+            function showModal(title, text) {
+                modalTitle.textContent = title;
+                modalText.textContent = text;
+                transactionModal.classList.remove('hidden');
+                modalIcon.innerHTML = '<i class="fas fa-spinner fa-spin text-blue-600"></i>';
+                transactionHash.textContent = '';
+                transactionHash.classList.add('hidden');
+            }
+
+            function updateModalSuccess(title, text, txHash = null) {
+                modalTitle.textContent = title;
+                modalText.textContent = text;
+                modalIcon.innerHTML = '<i class="fas fa-check-circle text-green-500"></i>';
+                if (txHash) {
+                    transactionHash.textContent = `Tx Hash: ${txHash}`;
+                    transactionHash.classList.remove('hidden');
+                }
+            }
+
+            function updateModalError(title, text) {
+                modalTitle.textContent = title;
+                modalText.textContent = text;
+                modalIcon.innerHTML = '<i class="fas fa-exclamation-circle text-red-500"></i>';
+                transactionHash.classList.add('hidden');
+            }
+
+            // Initialize UI
+            async function initUI() {
+                console.log('Initializing UI...');
+                try {
+                    const userAddress = await signer.getAddress();
+                    console.log('User address for UI:', userAddress);
+                    const userStakes = await getUserStakes(userAddress);
+                    const rewards = await stakingContract.calculateRewards(userAddress);
+                    const rewardRateValue = await stakingContract.rewardRate();
+                    nftContractElement.textContent = await stakingContract.nftContract();
+                    rewardTokenElement.textContent = await stakingContract.rewardToken();
+                    rewardRateElement.textContent = (ethers.utils.formatUnits(rewardRateValue, 18) * 86400).toFixed(2) + " THC/day per NFT";
+                    updateStakedCount(userStakes.length);
+                    updatePendingRewards(ethers.utils.formatUnits(rewards, 18));
+                    populateUnstakeDropdown(userStakes.map(stake => stake.tokenId));
+                    console.log('UI initialized successfully');
+                } catch (error) {
+                    console.error("Error initializing UI:", error);
+                    updateModalError("Initialization Failed", `Error: ${error.message}`);
+                }
+            }
+
+            // Event handlers
+            console.log('Attaching event listeners...');
+            connectWalletBtn.addEventListener('click', () => {
+                console.log('Connect Wallet (nav) clicked');
+                connectWallet();
+            });
+            connectWalletBtn2.addEventListener('click', () => {
+                console.log('Connect Wallet (hero) clicked');
+                connectWallet();
+            });
+            closeModal.addEventListener('click', () => {
+                console.log('Close Modal clicked');
+                transactionModal.classList.add('hidden');
+            });
+
+            // Initialize on load
+            console.log('Window loaded, initializing...');
+            stakeBtn.disabled = true;
+            unstakeBtn.disabled = true;
+            claimRewardsBtn.disabled = true;
+            nftContractElement.textContent = "Not connected";
+            rewardTokenElement.textContent = "Not connected";
+            rewardRateElement.textContent = "Not connected";
+        };
+    </script>
+</body>
+</html>
