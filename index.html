@@ -3,174 +3,349 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TetraToken NFT Staking</title>
+    <title>NFT Staking Platform | Base Blockchain</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.ethers.io/lib/ethers-6.0.umd.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0052FF', // Base blue
+                        secondary: '#FBCC5C',
+                        dark: '#1E1E1E',
+                        light: '#F5F5F5',
+                        accent: '#00D1B1'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body {
-            font-family: 'Orbitron', Arial, sans-serif;
-            background: linear-gradient(to bottom, #1a1a2e, #16213e);
-            color: #e94560;
-            text-align: center;
-            margin: 0;
-            padding: 20px;
+            font-family: 'Inter', sans-serif;
+            background-color: #F5F5F5;
         }
-        h1 {
-            font-size: 2.5em;
-            text-shadow: 0 0 10px #e94560;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: #0f3460;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 20px #e94560;
-        }
-        .nft-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 10px;
-            margin: 20px 0;
-        }
-        .nft-item {
-            background: #1a1a2e;
-            padding: 10px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .nft-item img {
-            width: 100%;
-            border-radius: 5px;
-            box-shadow: 0 0 10px #e94560;
-        }
-        .nft-item:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 15px #e94560;
-        }
-        button {
-            background: #e94560;
-            color: #fff;
-            border: none;
-            padding: 10px 20px;
-            margin: 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        button:hover {
-            transform: scale(1.1);
-            box-shadow: 0 0 20px #e94560;
-        }
-        button:disabled {
-            background: #555;
-            cursor: not-allowed;
-        }
-        .nft-item .button-group {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 5px;
-        }
-        .nft-item button {
-            padding: 8px 15px;
-            margin: 5px;
-            font-size: 0.9em;
-        }
-        #status {
-            margin-top: 20px;
-            font-size: 1.2em;
-        }
-        #particles-js {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
+        .gradient-bg {
+            background: linear-gradient(135deg, #0052FF 0%, #00D1B1 100%);
         }
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron&display=swap" rel="stylesheet">
 </head>
-<body>
-    <div id="particles-js"></div>
-    <div class="container">
-        <img src="https://your-site.com/tetra-logo.png" alt="TetraToken" style="width: 100px;">
-        <h1>TetraToken NFT Staking</h1>
-        <p>Wallet: <span id="wallet"></span></p>
-        <p>Rewards: <span id="rewards"></span> THC</p>
-        <p>Gas Estimate: <span id="gas"></span></p>
-        <div class="nft-grid" id="nft-grid"></div>
-        <button onclick="connectWallet()">Connect Wallet</button>
-        <div id="status"></div>
+<body class="min-h-screen bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center">
+                        <img class="h-8 w-auto" src="https://base.org/images/base-icon.svg" alt="Base Logo">
+                        <span class="ml-2 text-xl font-bold text-primary">NFT Staking</span>
+                    </div>
+                </div>
+                <div class="hidden sm:ml-6 sm:flex sm:items-center">
+                    <button id="connectWallet" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                        Connect Wallet
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="gradient-bg text-white py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="lg:grid lg:grid-cols-2 lg:gap-8 items-center">
+                <div class="mb-8 lg:mb-0">
+                    <h1 class="text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
+                        Stake Your NFTs, Earn Rewards
+                    </h1>
+                    <p class="mt-6 text-xl text-blue-100 max-w-3xl">
+                        Lock your NFTs in our secure staking contract and earn daily THC tokens on Base blockchain.
+                    </p>
+                    <div class="mt-8 flex flex-col sm:flex-row sm:space-x-4">
+                        <button id="connectWallet2" class="mb-4 sm:mb-0 flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-primary bg-white hover:bg-gray-100 md:py-4 md:text-lg md:px-10">
+                            Connect Wallet
+                        </button>
+                        <button class="flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-primary bg-opacity-20 hover:bg-opacity-30 md:py-4 md:text-lg md:px-10">
+                            Learn More
+                        </button>
+                    </div>
+                </div>
+                <div class="relative">
+                    <img class="w-full rounded-xl shadow-2xl border-4 border-white" src="https://placeholder.co/600x400?text=Staking+Preview" alt="NFT Staking Preview">
+                    <div class="absolute -bottom-4 -right-4 bg-white rounded-lg shadow-lg p-4 w-3/4">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Daily Reward Rate</p>
+                                <p class="text-2xl font-bold text-primary">1,000 THC</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-sm font-medium text-gray-500">Contract</p>
+                                <p class="text-xs font-mono text-primary truncate w-24">0x56baF3...72FE6</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/4.7.0/web3.min.js"></script>
-    <script src="https://unpkg.com/@coinbase/wallet-sdk@3.9.3/dist/index.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/js-confetti@0.11.0/dist/js-confetti.browser.js"></script>
-    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Staking Dashboard Card -->
+            <div class="bg-white rounded-xl shadow-md p-6 md:col-span-2">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900">Staking Dashboard</h2>
+                    <span id="networkIndicator" class="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">Base Network</span>
+                </div>
+                
+                <!-- Wallet Info -->
+                <div id="walletInfo" class="hidden mb-8 bg-gray-50 rounded-lg p-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <p class="text-gray-500">Connected Wallet</p>
+                        <button id="disconnectWallet" class="text-xs text-red-500 hover:text-red-700">Disconnect</button>
+                    </div>
+                    <p id="walletAddress" class="font-mono text-sm break-all text-gray-700"></p>
+                </div>
+
+                <!-- Balance Info -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                    <div class="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-4">
+                        <p class="text-sm text-gray-600">Total Staked NFTs</p>
+                        <p id="stakedCount" class="text-2xl font-bold text-gray-900">0</p>
+                    </div>
+                    <div class="bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-4">
+                        <p class="text-sm text-gray-600">Pending Rewards</p>
+                        <p id="pendingRewards" class="text-2xl font-bold text-gray-900">0 THC</p>
+                    </div>
+                </div>
+
+                <!-- Stake/Unstake Form -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-semibold mb-4">Manage Your NFTs</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h4 class="font-medium text-gray-700 mb-3">Stake NFT</h4>
+                            <input id="stakeTokenId" type="number" placeholder="NFT ID" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary">
+                            <button id="stakeBtn" disabled class="mt-3 w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                                Stake NFT
+                            </button>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h4 class="font-medium text-gray-700 mb-3">Unstake NFT</h4>
+                            <select id="unstakeTokenId" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary">
+                                <option value="" disabled selected>Select NFT to unstake</option>
+                            </select>
+                            <button id="unstakeBtn" disabled class="mt-3 w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-secondary hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary">
+                                Unstake NFT
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Claim Rewards -->
+                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-exclamation-circle text-yellow-400"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-yellow-700">
+                                You can claim your rewards at any time. Rewards are automatically calculated based on your staking duration.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="claimRewardsBtn" disabled class="w-full flex justify-center items-center py-3 px-6 border border-transparent rounded-md shadow-sm text-lg font-medium text-white bg-accent hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent">
+                    <i class="fas fa-coins mr-2"></i> Claim Rewards
+                </button>
+            </div>
+
+            <!-- Info Panel -->
+            <div class="space-y-6">
+                <!-- Contract Info Card -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-lg font-semibold mb-4">Contract Information</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <p class="text-xs text-gray-500">NFT Contract</p>
+                            <p id="nftContract" class="text-sm font-mono text-gray-700 truncate">Loading...</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500">Reward Token</p>
+                            <p id="rewardToken" class="text-sm font-mono text-gray-700 truncate">Loading...</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500">Staking Contract</p>
+                            <p class="text-sm font-mono text-primary truncate">0x56baF3C662adf4a0c8981E0AA8A5797fE6E72FE6</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500">Reward Rate</p>
+                            <p id="rewardRate" class="text-sm font-mono text-gray-700 truncate">Loading...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats Card -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-lg font-semibold mb-4">Staking Statistics</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <p class="text-sm text-gray-600">Total Staked NFTs</p>
+                            <p id="totalStaked" class="text-sm font-semibold text-gray-900">0</p>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <p class="text-sm text-gray-600">TVL (Total Value Locked)</p>
+                            <p id="tvl" class="text-sm font-semibold text-gray-900">$0</p>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <p class="text-sm text-gray-600">APY (Estimated)</p>
+                            <p class="text-sm font-semibold text-gray-900">120%</p>
+                        </div>
+                        <div class="pt-3 mt-3 border-t border-gray-200">
+                            <p class="text-xs text-gray-500">When circulation reaches 790M THC, reward rate will be reduced to 5% of current rate.</p>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                                <div id="circulationBar" class="bg-primary h-2.5 rounded-full" style="width: 0%"></div>
+                            </div>
+                            <p id="circulationText" class="text-xs text-gray-700 mt-1">0/790M THC</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- How It Works Card -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-lg font-semibold mb-4">How It Works</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 h-10 w-10 rounded-full bg-primary bg-opacity-10 flex items-center justify-center">
+                                <span class="text-primary font-bold">1</span>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm font-medium text-gray-900">Connect your wallet</p>
+                                <p class="text-sm text-gray-500">Use a Base-compatible wallet like Coinbase Wallet or MetaMask.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 h-10 w-10 rounded-full bg-primary bg-opacity-10 flex items-center justify-center">
+                                <span class="text-primary font-bold">2</span>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm font-medium text-gray-900">Stake your NFTs</p>
+                                <p class="text-sm text-gray-500">Enter the NFT ID and click "Stake" to lock it in the contract.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 h-10 w-10 rounded-full bg-primary bg-opacity-10 flex items-center justify-center">
+                                <span class="text-primary font-bold">3</span>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm font-medium text-gray-900">Earn rewards</p>
+                                <p class="text-sm text-gray-500">Every second your NFT is staked, you accumulate THC tokens.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 h-10 w-10 rounded-full bg-primary bg-opacity-10 flex items-center justify-center">
+                                <span class="text-primary font-bold">4</span>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm font-medium text-gray-900">Claim anytime</p>
+                                <p class="text-sm text-gray-500">Withdraw your rewards whenever you want, or stake longer for more.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transaction Modal -->
+    <div id="transactionModal" class="hidden fixed inset-0 overflow-y-auto z-50">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div id="modalIcon" class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+                            <i class="fas fa-spinner fa-spin text-blue-600"></i>
+                        </div>
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                            <h3 id="modalTitle" class="text-lg leading-6 font-medium text-gray-900">
+                                Processing Transaction
+                            </h3>
+                            <div class="mt-2">
+                                <p id="modalText" class="text-sm text-gray-500">
+                                    Your transaction is being processed on the blockchain. Please wait...
+                                </p>
+                                <div id="transactionHash" class="mt-2 font-mono text-xs text-blue-600 truncate"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button id="closeModal" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:ml-3 sm:w-auto sm:text-sm">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-12">
+        <div class="max-w-7xl mx-auto py-12 px-4 overflow-hidden sm:px-6 lg:px-8">
+            <nav class="-mx-5 -my-2 flex flex-wrap justify-center" aria-label="Footer">
+                <div class="px-5 py-2">
+                    <a href="#" class="text-base text-gray-500 hover:text-gray-900">Docs</a>
+                </div>
+                <div class="px-5 py-2">
+                    <a href="#" class="text-base text-gray-500 hover:text-gray-900">Audit</a>
+                </div>
+                <div class="px-5 py-2">
+                    <a href="#" class="text-base text-gray-500 hover:text-gray-900">Terms</a>
+                </div>
+                <div class="px-5 py-2">
+                    <a href="#" class="text-base text-gray-500 hover:text-gray-900">Privacy</a>
+                </div>
+                <div class="px-5 py-2">
+                    <a href="#" class="text-base text-gray-500 hover:text-gray-900">GitHub</a>
+                </div>
+            </nav>
+            <p class="mt-8 text-center text-base text-gray-400">
+                © 2023 NFT Staking Platform. Built on Base blockchain.
+            </p>
+            <div class="mt-8 flex justify-center space-x-6">
+                <a href="#" class="text-gray-400 hover:text-primary">
+                    <span class="sr-only">Twitter</span>
+                    <i class="fab fa-twitter"></i>
+                </a>
+                <a href="#" class="text-gray-400 hover:text-primary">
+                    <span class="sr-only">Discord</span>
+                    <i class="fab fa-discord"></i>
+                </a>
+                <a href="#" class="text-gray-400 hover:text-primary">
+                    <span class="sr-only">Telegram</span>
+                    <i class="fab fa-telegram"></i>
+                </a>
+            </div>
+        </div>
+    </footer>
+
     <script>
-        let web3, accounts, contract, nftContract;
+        // Contract Address
         const contractAddress = "0x56baF3C662adf4a0c8981E0AA8A5797fE6E72FE6";
-        const nftContractAddress = "0x2907e009D71bd401A50dF63B91A6dcC82881320C";
-        const contractABI = [
-            {
-                "inputs": [
-                    {"internalType": "address", "name": "_nftContract", "type": "address"},
-                    {"internalType": "address", "name": "_rewardToken", "type": "address"}
-                ],
-                "stateMutability": "nonpayable",
-                "type": "constructor"
-            },
-            {
-                "inputs": [
-                    {"internalType": "address", "name": "owner", "type": "address"}
-                ],
-                "name": "OwnableInvalidOwner",
-                "type": "error"
-            },
-            {
-                "inputs": [
-                    {"internalType": "address", "name": "account", "type": "address"}
-                ],
-                "name": "OwnableUnauthorizedAccount",
-                "type": "error"
-            },
-            {
-                "anonymous": false,
-                "inputs": [
-                    {"indexed": true, "internalType": "address", "name": "previousOwner", "type": "address"},
-                    {"indexed": true, "internalType": "address", "name": "newOwner", "type": "address"}
-                ],
-                "name": "OwnershipTransferred",
-                "type": "event"
-            },
-            {
-                "inputs": [],
-                "name": "CIRCULATION_THRESHOLD",
-                "outputs": [
-                    {"internalType": "uint256", "name": "", "type": "uint256"}
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "TOTAL_SUPPLY",
-                "outputs": [
-                    {"internalType": "uint256", "name": "", "type": "uint256"}
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {"internalType": "address", "name": "user", "type": "address"}
-                ],
-                "name": "calculateRewards",
-                "outputs": [
-                    {"internalType": "uint256", "name": "", "type": "uint256"}
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
+
+        // Contract ABI (exact as provided)
+        const stakingContractABI = [
             {
                 "inputs": [],
                 "name": "claimRewards",
@@ -180,7 +355,11 @@
             },
             {
                 "inputs": [
-                    {"internalType": "uint256", "name": "amount", "type": "uint256"}
+                    {
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    }
                 ],
                 "name": "depositRewards",
                 "outputs": [],
@@ -188,22 +367,61 @@
                 "type": "function"
             },
             {
-                "inputs": [],
-                "name": "nftContract",
-                "outputs": [
-                    {"internalType": "contract IERC721", "name": "", "type": "address"}
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "_nftContract",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "_rewardToken",
+                        "type": "address"
+                    }
                 ],
-                "stateMutability": "view",
-                "type": "function"
+                "stateMutability": "nonpayable",
+                "type": "constructor"
             },
             {
-                "inputs": [],
-                "name": "owner",
-                "outputs": [
-                    {"internalType": "address", "name": "", "type": "address"}
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "owner",
+                        "type": "address"
+                    }
                 ],
-                "stateMutability": "view",
-                "type": "function"
+                "name": "OwnableInvalidOwner",
+                "type": "error"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "account",
+                        "type": "address"
+                    }
+                ],
+                "name": "OwnableUnauthorizedAccount",
+                "type": "error"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "previousOwner",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "newOwner",
+                        "type": "address"
+                    }
+                ],
+                "name": "OwnershipTransferred",
+                "type": "event"
             },
             {
                 "inputs": [],
@@ -213,35 +431,12 @@
                 "type": "function"
             },
             {
-                "inputs": [],
-                "name": "rewardRate",
-                "outputs": [
-                    {"internalType": "uint256", "name": "", "type": "uint256"}
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "rewardReduced",
-                "outputs": [
-                    {"internalType": "bool", "name": "", "type": "bool"}
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "rewardToken",
-                "outputs": [
-                    {"internalType": "contract IERC20", "name": "", "type": "address"}
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
                 "inputs": [
-                    {"internalType": "uint256", "name": "tokenId", "type": "uint256"}
+                    {
+                        "internalType": "uint256",
+                        "name": "tokenId",
+                        "type": "uint256"
+                    }
                 ],
                 "name": "stake",
                 "outputs": [],
@@ -250,20 +445,11 @@
             },
             {
                 "inputs": [
-                    {"internalType": "address", "name": "", "type": "address"},
-                    {"internalType": "uint256", "name": "", "type": "uint256"}
-                ],
-                "name": "stakes",
-                "outputs": [
-                    {"internalType": "uint256", "name": "tokenId", "type": "uint256"},
-                    {"internalType": "uint256", "name": "stakedAt", "type": "uint256"}
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {"internalType": "address", "name": "newOwner", "type": "address"}
+                    {
+                        "internalType": "address",
+                        "name": "newOwner",
+                        "type": "address"
+                    }
                 ],
                 "name": "transferOwnership",
                 "outputs": [],
@@ -272,323 +458,497 @@
             },
             {
                 "inputs": [
-                    {"internalType": "uint256", "name": "tokenId", "type": "uint256"}
+                    {
+                        "internalType": "uint256",
+                        "name": "tokenId",
+                        "type": "uint256"
+                    }
                 ],
                 "name": "unstake",
                 "outputs": [],
                 "stateMutability": "nonpayable",
                 "type": "function"
-            }
-        ];
-        const erc721ABI = [
+            },
             {
                 "inputs": [
-                    {"internalType": "address", "name": "owner", "type": "address"}
+                    {
+                        "internalType": "address",
+                        "name": "user",
+                        "type": "address"
+                    }
                 ],
-                "name": "balanceOf",
+                "name": "calculateRewards",
                 "outputs": [
-                    {"internalType": "uint256", "name": "", "type": "uint256"}
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "CIRCULATION_THRESHOLD",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "nftContract",
+                "outputs": [
+                    {
+                        "internalType": "contract IERC721",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "owner",
+                "outputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "rewardRate",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "rewardReduced",
+                "outputs": [
+                    {
+                        "internalType": "bool",
+                        "name": "",
+                        "type": "bool"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "rewardToken",
+                "outputs": [
+                    {
+                        "internalType": "contract IERC20",
+                        "name": "",
+                        "type": "address"
+                    }
                 ],
                 "stateMutability": "view",
                 "type": "function"
             },
             {
                 "inputs": [
-                    {"internalType": "address", "name": "owner", "type": "address"},
-                    {"internalType": "uint256", "name": "index", "type": "uint256"}
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
                 ],
-                "name": "tokenOfOwnerByIndex",
+                "name": "stakes",
                 "outputs": [
-                    {"internalType": "uint256", "name": "", "type": "uint256"}
+                    {
+                        "internalType": "uint256",
+                        "name": "tokenId",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "stakedAt",
+                        "type": "uint256"
+                    }
                 ],
                 "stateMutability": "view",
                 "type": "function"
             },
             {
-                "inputs": [
-                    {"internalType": "uint256", "name": "tokenId", "type": "uint256"}
-                ],
-                "name": "ownerOf",
+                "inputs": [],
+                "name": "TOTAL_SUPPLY",
                 "outputs": [
-                    {"internalType": "address", "name": "", "type": "address"}
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {"internalType": "address", "name": "spender", "type": "address"},
-                    {"internalType": "uint256", "name": "tokenId", "type": "uint256"}
-                ],
-                "name": "approve",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {"internalType": "uint256", "name": "tokenId", "type": "uint256"}
-                ],
-                "name": "getApproved",
-                "outputs": [
-                    {"internalType": "address", "name": "", "type": "address"}
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
                 ],
                 "stateMutability": "view",
                 "type": "function"
             }
         ];
 
+        // DOM Elements
+        const connectWalletBtn = document.getElementById('connectWallet');
+        const connectWalletBtn2 = document.getElementById('connectWallet2');
+        const disconnectWalletBtn = document.getElementById('disconnectWallet');
+        const walletInfo = document.getElementById('walletInfo');
+        const walletAddress = document.getElementById('walletAddress');
+        const stakedCount = document.getElementById('stakedCount');
+        const pendingRewards = document.getElementById('pendingRewards');
+        const stakeBtn = document.getElementById('stakeBtn');
+        const unstakeBtn = document.getElementById('unstakeBtn');
+        const claimRewardsBtn = document.getElementById('claimRewardsBtn');
+        const stakeTokenId = document.getElementById('stakeTokenId');
+        const unstakeTokenId = document.getElementById('unstakeTokenId');
+        const transactionModal = document.getElementById('transactionModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalText = document.getElementById('modalText');
+        const modalIcon = document.getElementById('modalIcon');
+        const transactionHash = document.getElementById('transactionHash');
+        const closeModal = document.getElementById('closeModal');
+        const totalStaked = document.getElementById('totalStaked');
+        const tvl = document.getElementById('tvl');
+        const circulationBar = document.getElementById('circulationBar');
+        const circulationText = document.getElementById('circulationText');
+        const nftContractElement = document.getElementById('nftContract');
+        const rewardTokenElement = document.getElementById('rewardToken');
+        const rewardRateElement = document.getElementById('rewardRate');
+
+        let provider, signer, stakingContract;
+
+        // Initialize contract
+        async function initializeContract() {
+            provider = new ethers.providers.Web3Provider(window.ethereum);
+            signer = provider.getSigner();
+            stakingContract = new ethers.Contract(contractAddress, stakingContractABI, signer);
+        }
+
+        // Update UI functions
+        function updateStakedCount(count) {
+            stakedCount.textContent = count;
+        }
+
+        function updatePendingRewards(amount) {
+            pendingRewards.textContent = Number(amount).toLocaleString(undefined, { maximumFractionDigits: 2 }) + " THC";
+        }
+
+        function updateTotalStaked(count) {
+            totalStaked.textContent = count.toLocaleString();
+        }
+
+        async function updateTVL(totalStakedNFTs) {
+            // Placeholder: Replace with API call to fetch NFT floor price (e.g., OpenSea, Alchemy)
+            const floorPriceUSD = 500; // Mock floor price in USD
+            const tvlValue = totalStakedNFTs * floorPriceUSD;
+            tvl.textContent = "$" + tvlValue.toLocaleString();
+        }
+
+        async function updateCirculation() {
+            try {
+                const rewardTokenAddress = await stakingContract.rewardToken();
+                const ownerAddress = await stakingContract.owner();
+                const totalSupply = await stakingContract.TOTAL_SUPPLY();
+                const rewardTokenContract = new ethers.Contract(rewardTokenAddress, [
+                    "function balanceOf(address account) view returns (uint256)"
+                ], provider);
+                const ownerBalance = await rewardTokenContract.balanceOf(ownerAddress);
+                const circulation = totalSupply.sub(ownerBalance);
+                const threshold = await stakingContract.CIRCULATION_THRESHOLD();
+                const percentage = Math.min(100, circulation.mul(100).div(threshold).toNumber());
+                circulationBar.style.width = percentage + "%";
+                circulationText.textContent = (circulation.div(ethers.BigNumber.from("1000000")).toNumber()).toLocaleString(undefined, { maximumFractionDigits: 2 }) + "M/" + (threshold.div(ethers.BigNumber.from("1000000")).toNumber()) + "M THC";
+            } catch (error) {
+                console.error("Error updating circulation:", error);
+                circulationText.textContent = "Error loading circulation";
+            }
+        }
+
+        function populateUnstakeDropdown(nftIds) {
+            unstakeTokenId.innerHTML = '<option value="" disabled selected>Select NFT to unstake</option>';
+            nftIds.forEach(id => {
+                const option = document.createElement('option');
+                option.value = id;
+                option.textContent = "NFT #" + id;
+                unstakeTokenId.appendChild(option);
+            });
+        }
+
+        // Fetch user stakes (since stakes mapping isn't directly iterable)
+        async function getUserStakes(userAddress) {
+            const stakes = [];
+            let i = 0;
+            try {
+                while (true) {
+                    const stake = await stakingContract.stakes(userAddress, i);
+                    if (stake.tokenId.toString() !== "0" || stake.stakedAt.toString() !== "0") {
+                        stakes.push({
+                            tokenId: stake.tokenId.toString(),
+                            stakedAt: stake.stakedAt.toString()
+                        });
+                    }
+                    i++;
+                }
+            } catch (error) {
+                // Stop when index is out of bounds
+            }
+            return stakes;
+        }
+
+        // Wallet connection
         async function connectWallet() {
-            // Debug: Confirm the function is called
-            console.log("connectWallet function called at", new Date().toISOString());
-            alert("Connect Wallet button clicked! If nothing happens after this, check the browser console for errors.");
-
-            let provider;
+            if (!window.ethereum) {
+                alert("Please install MetaMask or another compatible wallet");
+                return;
+            }
             try {
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                console.log("window.ethereum:", window.ethereum);
-
-                if (window.ethereum && (window.ethereum.isCoinbaseWallet || window.ethereum.isMetaMask)) {
-                    provider = window.ethereum;
-                    console.log("Detected wallet provider:", provider.isCoinbaseWallet ? "Coinbase" : "MetaMask");
-                } else {
-                    console.log("No window.ethereum, trying Coinbase Wallet SDK...");
+                provider = new ethers.providers.Web3Provider(window.ethereum);
+                await provider.send("eth_requestAccounts", []);
+                signer = provider.getSigner();
+                const address = await signer.getAddress();
+                const network = await provider.getNetwork();
+                if (network.chainId !== 8453) {
                     try {
-                        const CoinbaseWalletSDK = window.CoinbaseWalletSDK;
-                        const sdk = new CoinbaseWalletSDK({
-                            appName: "TetraToken Staking",
-                            chainIds: [8453]
-                        });
-                        provider = sdk.makeWeb3Provider("https://mainnet.base.org", 8453);
-                        console.log("SDK provider initialized");
-                    } catch (e) {
-                        console.log("SDK failed:", e.message);
-                        provider = new Web3.providers.HttpProvider("https://mainnet.base.org");
-                        updateStatus("Using public RPC (read-only). Install or enable Coinbase Wallet or MetaMask.");
-                        console.log("Fallback to public RPC");
-                        return; // Exit early since we’re in read-only mode
-                    }
-                }
-
-                web3 = new Web3(provider);
-                if (provider.request) {
-                    console.log("Requesting accounts...");
-                    accounts = await provider.request({ method: 'eth_requestAccounts' });
-                    console.log("Accounts:", accounts);
-                    try {
-                        console.log("Switching to Base Mainnet...");
-                        await provider.request({
+                        await window.ethereum.request({
                             method: 'wallet_switchEthereumChain',
-                            params: [{ chainId: '0x2135' }]
+                            params: [{ chainId: '0x213e' }], // Base mainnet
                         });
-                    } catch (switchError) {
-                        console.log("Switch error:", switchError);
-                        if (switchError.code === 4902) {
-                            console.log("Adding Base Mainnet...");
-                            await provider.request({
-                                method: 'wallet_addEthereumChain',
-                                params: [{
-                                    chainId: '0x2135',
-                                    chainName: 'Base Mainnet',
-                                    nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
-                                    rpcUrls: ['https://mainnet.base.org'],
-                                    blockExplorerUrls: ['https://basescan.org']
-                                }]
-                            });
-                        } else {
-                            throw switchError;
-                        }
+                    } catch (error) {
+                        alert("Please switch to the Base network");
+                        return;
                     }
-                    document.getElementById('wallet').innerText = accounts[0];
-                } else {
-                    document.getElementById('wallet').innerText = "Read-only mode";
                 }
-                contract = new web3.eth.Contract(contractABI, contractAddress);
-                nftContract = new web3.eth.Contract(erc721ABI, nftContractAddress);
-                updateStatus("Connected to Base Mainnet!");
-                console.log("Contracts initialized");
-                await loadUserNFTs();
-                await loadData();
+                walletInfo.classList.remove('hidden');
+                walletAddress.textContent = address;
+                connectWalletBtn.textContent = "Connected";
+                connectWalletBtn2.textContent = "Connected";
+                connectWalletBtn.classList.remove('bg-primary');
+                connectWalletBtn.classList.add('bg-green-500');
+                connectWalletBtn2.classList.remove('bg-primary');
+                connectWalletBtn2.classList.add('bg-green-500');
+                stakeBtn.disabled = false;
+                unstakeBtn.disabled = false;
+                claimRewardsBtn.disabled = false;
+                await initializeContract();
+                await initUI();
             } catch (error) {
-                console.log("Connection error:", error.message);
-                updateStatus("Connection failed: " + error.message);
+                console.error("Wallet connection failed:", error);
+                updateModalError("Connection Failed", `Error: ${error.message}`);
             }
         }
 
-        async function loadUserNFTs() {
-            try {
-                console.log("Running updated loadUserNFTs with THREE buttons per NFT");
-                console.log("Loading NFTs for:", accounts ? accounts[0] : "no account");
-                const nftGrid = document.getElementById('nft-grid'); // Fixed typo: 'nft-games' to 'nft-grid'
-                nftGrid.innerHTML = '<p>Loading NFTs...</p>';
-                let tokenIds = new Set();
-                let stakedStatus = {};
+        // Disconnect wallet
+        disconnectWalletBtn.addEventListener('click', () => {
+            walletInfo.classList.add('hidden');
+            connectWalletBtn.textContent = "Connect Wallet";
+            connectWalletBtn2.textContent = "Connect Wallet";
+            connectWalletBtn.classList.remove('bg-green-500');
+            connectWalletBtn.classList.add('bg-primary');
+            connectWalletBtn2.classList.remove('bg-green-500');
+            connectWalletBtn2.classList.add('bg-primary');
+            stakeBtn.disabled = true;
+            unstakeBtn.disabled = true;
+            claimRewardsBtn.disabled = true;
+            updateStakedCount(0);
+            updatePendingRewards(0);
+            updateTotalStaked(0);
+            updateTVL(0);
+            populateUnstakeDropdown([]);
+            nftContractElement.textContent = "Not connected";
+            rewardTokenElement.textContent = "Not connected";
+            rewardRateElement.textContent = "Not connected";
+            circulationText.textContent = "Not connected";
+            circulationBar.style.width = "0%";
+        });
 
-                if (accounts) {
-                    const balance = await nftContract.methods.balanceOf(accounts[0]).call();
-                    console.log("Wallet NFT balance:", balance);
-                    for (let i = 0; i < balance; i++) {
-                        const tokenId = await nftContract.methods.tokenOfOwnerByIndex(accounts[0], i).call();
-                        tokenIds.add(tokenId);
-                        stakedStatus[tokenId] = false;
-                    }
-                }
-
-                if (accounts) {
-                    let i = 0;
-                    while (true) {
-                        try {
-                            const stake = await contract.methods.stakes(accounts[0], i).call();
-                            const tokenId = stake.tokenId;
-                            const owner = await nftContract.methods.ownerOf(tokenId).call();
-                            if (owner.toLowerCase() === contractAddress.toLowerCase()) {
-                                tokenIds.add(tokenId);
-                                stakedStatus[tokenId] = true;
-                            } else {
-                                console.log(`NFT ${tokenId} listed in stakes but not held by contract`);
-                            }
-                            i++;
-                        } catch (error) {
-                            console.log("Finished fetching staked NFTs at index", i);
-                            break;
-                        }
-                    }
-                }
-
-                nftGrid.innerHTML = '';
-                if (tokenIds.size === 0) {
-                    nftGrid.innerHTML = '<p>No NFTs found in your wallet or staked.</p>';
-                } else {
-                    for (const tokenId of tokenIds) {
-                        const isStaked = stakedStatus[tokenId];
-                        console.log(`NFT ${tokenId}: ${isStaked ? 'Staked' : 'Not Staked'}`);
-                        const nftItem = document.createElement('div');
-                        nftItem.className = 'nft-item';
-                        nftItem.innerHTML = `
-                            <img src="https://via.placeholder.com/150?text=NFT+${tokenId}" alt="NFT ${tokenId}">
-                            <p>ID: ${tokenId}</p>
-                            <p>${isStaked ? 'Staked' : 'Not Staked'}</p>
-                            <div class="button-group">
-                                <button onclick="stakeNFT(${tokenId})" ${!accounts || isStaked ? 'disabled' : ''}>Stake</button>
-                                <button onclick="unstakeNFT(${tokenId})" ${!accounts || !isStaked ? 'disabled' : ''}>Unstake</button>
-                                <button onclick="claimRewards()" ${!accounts ? 'disabled' : ''}>Claim Rewards</button>
-                            </div>
-                        `;
-                        nftGrid.appendChild(nftItem);
-                    }
-                }
-            } catch (error) {
-                console.log("NFT load error:", error.message);
-                updateStatus("Failed to load NFTs: " + error.message);
-            }
-        }
-
-        async function stakeNFT(tokenId) {
-            if (!accounts) {
-                updateStatus("Connect Coinbase Wallet to stake!");
+        // Stake NFT
+        stakeBtn.addEventListener('click', async () => {
+            const tokenId = parseInt(stakeTokenId.value);
+            if (isNaN(tokenId) || tokenId < 0) {
+                alert("Please enter a valid NFT ID");
                 return;
             }
+            stakeBtn.disabled = true;
+            showModal("Staking NFT", `Staking NFT #${tokenId}...`);
             try {
-                console.log(`Staking NFT ${tokenId}`);
-                const owner = await nftContract.methods.ownerOf(tokenId).call();
-                if (owner.toLowerCase() !== accounts[0].toLowerCase()) {
-                    throw new Error(`You do not own NFT ${tokenId}`);
+                const nftContractAddress = await stakingContract.nftContract();
+                const nftContract = new ethers.Contract(nftContractAddress, [
+                    "function ownerOf(uint256 tokenId) view returns (address)",
+                    "function approve(address to, uint256 tokenId) public",
+                    "function getApproved(uint256 tokenId) view returns (address)"
+                ], signer);
+                const owner = await nftContract.ownerOf(tokenId);
+                const userAddress = await signer.getAddress();
+                if (owner.toLowerCase() !== userAddress.toLowerCase()) {
+                    throw new Error("You do not own this NFT");
                 }
-                const approved = await nftContract.methods.getApproved(tokenId).call();
+                const approved = await nftContract.getApproved(tokenId);
                 if (approved.toLowerCase() !== contractAddress.toLowerCase()) {
-                    updateStatus(`Approving NFT ${tokenId} for staking...`);
-                    await nftContract.methods.approve(contractAddress, tokenId).send({ from: accounts[0] });
-                    updateStatus(`NFT ${tokenId} approved!`);
+                    const approveTx = await nftContract.approve(contractAddress, tokenId);
+                    await approveTx.wait();
+                    showModal("Approving NFT", `Approval for NFT #${tokenId} confirmed. Now staking...`);
                 }
-                const gasEstimate = await contract.methods.stake(tokenId).estimateGas({ from: accounts[0] });
-                document.getElementById('gas').innerText = `${gasEstimate} (approx. $0.10)`;
-                await contract.methods.stake(tokenId).send({ from: accounts[0] });
-                updateStatus(`NFT ${tokenId} Staked!`);
-                await loadUserNFTs();
-                await loadData();
+                const tx = await stakingContract.stake(tokenId);
+                await tx.wait();
+                const userStakes = await getUserStakes(userAddress);
+                updateStakedCount(userStakes.length);
+                populateUnstakeDropdown(userStakes.map(stake => stake.tokenId));
+                updateModalSuccess("NFT Staked", `NFT #${tokenId} has been successfully staked!`, tx.hash);
+                stakeTokenId.value = '';
             } catch (error) {
-                console.log("Stake error:", error.message);
-                updateStatus(`Stake failed: ${error.message}`);
+                let errorMessage = error.message;
+                if (errorMessage.includes("Not owner")) {
+                    errorMessage = "You do not own this NFT or it doesn't exist";
+                } else if (errorMessage.includes("transfer caller is not owner nor approved")) {
+                    errorMessage = "NFT not approved for staking";
+                }
+                updateModalError("Staking Failed", `Error: ${errorMessage}`);
+            } finally {
+                stakeBtn.disabled = false;
             }
-        }
+        });
 
-        async function unstakeNFT(tokenId) {
-            if (!accounts) {
-                updateStatus("Connect Coinbase Wallet to unstake!");
+        // Unstake NFT
+        unstakeBtn.addEventListener('click', async () => {
+            const tokenId = unstakeTokenId.value;
+            if (!tokenId) {
+                alert("Please select an NFT to unstake");
                 return;
             }
+            unstakeBtn.disabled = true;
+            showModal("Unstaking NFT", `Unstaking NFT #${tokenId}...`);
             try {
-                console.log(`Unstaking NFT ${tokenId}`);
-                const gasEstimate = await contract.methods.unstake(tokenId).estimateGas({ from: accounts[0] });
-                document.getElementById('gas').innerText = `${gasEstimate} (approx. $0.10)`;
-                await contract.methods.unstake(tokenId).send({ from: accounts[0] });
-                updateStatus(`NFT ${tokenId} Unstaked!`);
-                await loadUserNFTs();
-                await loadData();
+                const tx = await stakingContract.unstake(tokenId);
+                await tx.wait();
+                const userAddress = await signer.getAddress();
+                const userStakes = await getUserStakes(userAddress);
+                updateStakedCount(userStakes.length);
+                populateUnstakeDropdown(userStakes.map(stake => stake.tokenId));
+                updateModalSuccess("NFT Unstaked", `NFT #${tokenId} has been successfully unstaked!`, tx.hash);
             } catch (error) {
-                console.log("Unstake error:", error.message);
-                updateStatus(`Unstake failed: ${error.message}`);
-            }
-        }
-
-        async function loadData() {
-            try {
-                console.log("Loading rewards for:", accounts ? accounts[0] : "no account");
-                const rewards = await contract.methods.calculateRewards(accounts[0] || "0x0000000000000000000000000000000000000000").call();
-                const rewardsInEther = web3.utils.fromWei(rewards, 'ether');
-                document.getElementById('rewards').innerText = rewardsInEther;
-                const claimButtons = document.querySelectorAll('.nft-item button[onclick="claimRewards()"]');
-                claimButtons.forEach(button => {
-                    button.disabled = !accounts || rewardsInEther === '0';
-                });
-                setTimeout(loadData, 5000);
-            } catch (error) {
-                console.log("Data load error:", error.message);
-                updateStatus("Data load failed: " + error.message);
-            }
-        }
-
-        async function claimRewards() {
-            if (!accounts) {
-                updateStatus("Connect Coinbase Wallet to claim rewards!");
-                return;
-            }
-            try {
-                console.log("Claiming rewards...");
-                const rewards = await contract.methods.calculateRewards(accounts[0]).call();
-                if (rewards === '0') {
-                    throw new Error("No rewards available to claim");
+                let errorMessage = error.message;
+                if (errorMessage.includes("revert")) {
+                    errorMessage = "NFT not staked or already unstaked";
                 }
-                const gasEstimate = await contract.methods.claimRewards().estimateGas({ from: accounts[0] });
-                document.getElementById('gas').innerText = `${gasEstimate} (approx. $0.10)`;
-                await contract.methods.claimRewards().send({ from: accounts[0] });
-                updateStatus("Rewards Claimed!");
-                const jsConfetti = new JSConfetti();
-                jsConfetti.addConfetti({ emojis: ['💰', '🎉'] });
-                await loadUserNFTs();
-                await loadData();
+                updateModalError("Unstaking Failed", `Error: ${errorMessage}`);
+            } finally {
+                unstakeBtn.disabled = false;
+            }
+        });
+
+        // Claim Rewards
+        claimRewardsBtn.addEventListener('click', async () => {
+            claimRewardsBtn.disabled = true;
+            showModal("Claiming Rewards", "Processing your reward claim...");
+            try {
+                const tx = await stakingContract.claimRewards();
+                await tx.wait();
+                const userAddress = await signer.getAddress();
+                const rewards = await stakingContract.calculateRewards(userAddress);
+                updatePendingRewards(ethers.utils.formatUnits(rewards, 18));
+                updateModalSuccess("Rewards Claimed", `Successfully claimed rewards!`, tx.hash);
             } catch (error) {
-                console.log("Claim error:", error.message);
-                updateStatus("Claim failed: " + error.message);
+                let errorMessage = error.message;
+                if (errorMessage.includes("No rewards")) {
+                    errorMessage = "No rewards available to claim";
+                } else if (errorMessage.includes("Insufficient reward balance")) {
+                    errorMessage = "Contract has insufficient reward tokens";
+                }
+                updateModalError("Claim Failed", `Error: ${errorMessage}`);
+            } finally {
+                claimRewardsBtn.disabled = false;
+            }
+        });
+
+        // Modal functions
+        function showModal(title, text) {
+            modalTitle.textContent = title;
+            modalText.textContent = text;
+            transactionModal.classList.remove('hidden');
+            modalIcon.innerHTML = '<i class="fas fa-spinner fa-spin text-blue-600"></i>';
+            transactionHash.textContent = '';
+            transactionHash.classList.add('hidden');
+        }
+
+        function updateModalSuccess(title, text, txHash = null) {
+            modalTitle.textContent = title;
+            modalText.textContent = text;
+            modalIcon.innerHTML = '<i class="fas fa-check-circle text-green-500"></i>';
+            if (txHash) {
+                transactionHash.textContent = `Tx Hash: ${txHash}`;
+                transactionHash.classList.remove('hidden');
             }
         }
 
-        function updateStatus(message) {
-            document.getElementById('status').innerText = message;
+        function updateModalError(title, text) {
+            modalTitle.textContent = title;
+            modalText.textContent = text;
+            modalIcon.innerHTML = '<i class="fas fa-exclamation-circle text-red-500"></i>';
+            transactionHash.classList.add('hidden');
         }
 
-        particlesJS("particles-js", {
-            particles: {
-                number: { value: 100 },
-                color: { value: "#e94560" },
-                shape: { type: "circle" },
-                opacity: { value: 0.5 },
-                size: { value: 3 },
-                move: { speed: 2 }
-            },
-            interactivity: {
-                events: { onhover: { enable: true, mode: "repulse" } }
+        // Initialize UI
+        async function initUI() {
+            try {
+                const userAddress = await signer.getAddress();
+                const userStakes = await getUserStakes(userAddress);
+                const rewards = await stakingContract.calculateRewards(userAddress);
+                const rewardRateValue = await stakingContract.rewardRate();
+                nftContractElement.textContent = await stakingContract.nftContract();
+                rewardTokenElement.textContent = await stakingContract.rewardToken();
+                rewardRateElement.textContent = (ethers.utils.formatUnits(rewardRateValue, 18) * 86400).toFixed(2) + " THC/day per NFT";
+                updateStakedCount(userStakes.length);
+                updatePendingRewards(ethers.utils.formatUnits(rewards, 18));
+                // Total staked NFTs not available in current ABI
+                updateTotalStaked(0); // Placeholder: Contract lacks totalStaked function
+                await updateTVL(0); // Placeholder: TVL depends on totalStaked
+                await updateCirculation();
+                populateUnstakeDropdown(userStakes.map(stake => stake.tokenId));
+            } catch (error) {
+                console.error("Error initializing UI:", error);
+                updateModalError("Initialization Failed", `Error: ${error.message}`);
             }
+        }
+
+        // Event handlers
+        connectWalletBtn.addEventListener('click', connectWallet);
+        connectWalletBtn2.addEventListener('click', connectWallet);
+        closeModal.addEventListener('click', () => {
+            transactionModal.classList.add('hidden');
+        });
+
+        // Initialize on load
+        window.addEventListener('load', () => {
+            stakeBtn.disabled = true;
+            unstakeBtn.disabled = true;
+            claimRewardsBtn.disabled = true;
+            nftContractElement.textContent = "Not connected";
+            rewardTokenElement.textContent = "Not connected";
+            rewardRateElement.textContent = "Not connected";
+            circulationText.textContent = "Not connected";
+            circulationBar.style.width = "0%";
         });
     </script>
 </body>
