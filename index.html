@@ -8,14 +8,10 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- ethers.js via CDN with local fallback -->
+    <!-- ethers.js via CDN -->
     <script src="https://cdn.jsdelivr.net/npm/ethers@6.0.0/dist/ethers.umd.min.js"></script>
-    <script>
-        // Fallback to local ethers.js if CDN fails
-        if (typeof ethers === 'undefined') {
-            document.write('<script src="lib/ethers.umd.min.js"><\/script>');
-        }
-    </script>
+    <!-- WalletConnect v2 SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@walletconnect/ethereum-provider@2.10.0/dist/umd/index.min.js"></script>
     <!-- Favicon to prevent 404 -->
     <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAFUlEQVR4nGP8//8/A8YYo5GMkYxRAwAWUAu6H5oA7gAAAABJRU5ErkJggg==">
     <style>
@@ -131,13 +127,10 @@
                             </button>
                         </div>
                         <div class="bg-gray-50 rounded-lg p-4">
-                            <h4 class="font-medium text-gray-700 mb-3">Unstake NFT</h4>
+                            <h4 class="font-medium text-gray-700 mb-3">Unstake</h4>
                             <select id="unstakeTokenId" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-600 focus:border-blue-600" aria-label="Select NFT to Unstake">
                                 <option value="" disabled selected>Select NFT to unstake</option>
                             </select>
-                            <button id="unstakeBtn" class="mt-3 w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-yellow-500 hover:bg-yellow-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500" aria-label="Unstake NFT">
-                                Unstake NFT
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -146,17 +139,17 @@
                 <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
                     <div class="flex items-start">
                         <div class="flex-shrink-0">
-                            <i class="fas fa-exclamation-circle text-yellow-400"></i>
+                            <i class="fas fa-exclamation-circle text-yellow-500"></i>
                         </div>
                         <div class="ml-3">
                             <p class="text-sm text-yellow-700">
-                                You can claim your rewards at any time. Rewards are automatically calculated based on your staking duration.
+                                You can claim your rewards anytime. Rewards are calculated based on your staking duration.
                             </p>
                         </div>
                     </div>
                 </div>
 
-                <button id="claimRewardsBtn" class="w-full flex justify-center items-center py-3 px-6 border border-transparent rounded-md shadow-sm text-lg font-medium text-white bg-teal-500 hover:bg-teal-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500" aria-label="Claim Rewards">
+                <button id="claimRewardsBtn" class="w-full flex justify-center items-center justify-center py-3 px-6 border border-transparent rounded-md shadow-sm text-lg font-semibold text-white bg-teal-600 hover:bg-teal-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-600" aria-label="Claim Rewards">
                     <i class="fas fa-coins mr-2"></i> Claim Rewards
                 </button>
             </div>
@@ -200,7 +193,7 @@
                             </div>
                         </div>
                         <div class="flex items-start">
-                            <div class="flex-shrink-0 h-10 w-10 rounded-full bg-blue-600 bg-opacity-10 flex items-center justify-center">
+                            <div class="flex-shrink-0 h-10 w-10 rounded-lg bg-blue-600 bg-opacity-10 flex items-center justify-center">
                                 <span class="text-blue-600 font-bold">2</span>
                             </div>
                             <div class="ml-3">
@@ -209,7 +202,7 @@
                             </div>
                         </div>
                         <div class="flex items-start">
-                            <div class="flex-shrink-0 h-10 w-10 rounded-full bg-blue-600 bg-opacity-10 flex items-center justify-center">
+                            <div class="flex-shrink-0 h-10 w-10 rounded-lg bg-blue-600 bg-opacity-10 flex items-center justify-center">
                                 <span class="text-blue-600 font-bold">3</span>
                             </div>
                             <div class="ml-3">
@@ -218,7 +211,7 @@
                             </div>
                         </div>
                         <div class="flex items-start">
-                            <div class="flex-shrink-0 h-10 w-10 rounded-full bg-blue-600 bg-opacity-10 flex items-center justify-center">
+                            <div class="flex-shrink-0 h-10 w-10 rounded-lg bg-blue-600 bg-opacity-10 flex items-center justify-center">
                                 <span class="text-blue-600 font-bold">4</span>
                             </div>
                             <div class="ml-3">
@@ -239,7 +232,7 @@
                 <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
             </div>
             <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true"></span>
-            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <div class="inline-block align-bottom bg-white rounded-lg shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
                 <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                     <div class="sm:flex sm:items-start">
                         <div id="modalIcon" class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
@@ -267,52 +260,47 @@
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="bg-white border-t border-gray-200 mt-12">
-        <div class="max-w-7xl mx-auto py-12 px-4 overflow-hidden sm:px-6 lg:px-8">
-            <nav class="-mx-5 -my-2 flex flex-wrap justify-center" aria-label="Footer">
-                <div class="px-5 py-2">
-                    <a href="#" class="text-base text-gray-500 hover:text-gray-900">Docs</a>
+    <!-- Wallet Selection Modal -->
+    <div id="walletModal" class="hidden fixed inset-0 overflow-y-auto z-50">
+        <div class="flex items-center justify-center min-h-screen px-4 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true"></span>
+            <div class="inline-block align-bottom bg-white rounded-lg shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Select Wallet</h3>
+                    <div class="space-y-4">
+                        <button id="browserWalletBtn" class="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600">
+                            <i class="fab fa-ethereum mr-2"></i> Browser Wallet (MetaMask, Coinbase Wallet)
+                            </button>
+                        <button id="walletConnectBtn" class="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <i class="fas fa-qrcode mr-2"></i> WalletConnect (QR Code)
+                        </button>
+                    </div>
+                    <div>
+                    <div class="bg-gray-100 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                        <button id="closeWalletModal" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-gray-300 text-base font-medium text-gray-700 hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 sm:ml-3 sm:w-auto sm:text-sm" aria-label="Close Wallet Modal">
+                            Cancel
+                        </button>
+                    </div>
                 </div>
-                <div class="px-5 py-2">
-                    <a href="#" class="text-base text-gray-500 hover:text-gray-900">Audit</a>
-                </div>
-                <div class="px-5 py-2">
-                    <a href="#" class="text-base text-gray-500 hover:text-gray-900">Terms</a>
-                </div>
-                <div class="px-5 py-2">
-                    <a href="#" class="text-base text-gray-500 hover:text-gray-900">Privacy</a>
-                </div>
-                <div class="px-5 py-2">
-                    <a href="#" class="text-base text-gray-500 hover:text-gray-900">GitHub</a>
-                </div>
-            </nav>
-            <p class="mt-8 text-center text-base text-gray-400">
-                © 2023 NFT Staking Platform. Built on Base blockchain.
-            </p>
-            <div class="mt-8 flex justify-center space-x-6">
-                <a href="#" class="text-gray-400 hover:text-blue-600">
-                    <span class="sr-only">Twitter</span>
-                    <i class="fab fa-twitter"></i>
-                </a>
-                <a href="#" class="text-gray-400 hover:text-blue-600">
-                    <span class="sr-only">Discord</span>
-                    <i class="fab fa-discord"></i>
-                </a>
-                <a href="#" class="text-gray-400 hover:text-blue-600">
-                    <span class="sr-only">Telegram</span>
-                    <i class="fab fa-telegram"></i>
-                </a>
             </div>
         </div>
-    </footer>
+
+    </div>
 
     <script defer>
-        window.onload = function() {
-            // Check if ethers.js is loaded
-            if (typeof ethers === 'undefined') {
-                console.error('ethers.js failed to load. Ensure the CDN is accessible or the local file (lib/ethers.umd.min.js) is present.');
-                alert('Failed to load required library (ethers.js). Please check your internet connection, ensure the local ethers.js file is present, or try a different browser.');
+        // Check if ethers.js and WalletConnect are loaded
+        window.onload = async function() {
+            if (!window.ethers) {
+                console.error('ethers.js not loaded. Ensure CDN is accessible or download locally.');
+                alert('Failed to load ethers.js. Please check your internet connection or try a different browser.');
+                return;
+            }
+            if (!window.EthereumProvider) {
+                console.error('WalletConnect SDK not loaded.');
+                alert('Failed to load WalletConnect SDK. Please check your internet connection.');
                 return;
             }
 
@@ -604,16 +592,36 @@
             const modalIcon = document.getElementById('modalIcon');
             const transactionHash = document.getElementById('transactionHash');
             const closeModal = document.getElementById('closeModal');
+            const walletModal = document.getElementById('walletModal');
+            const browserWalletBtn = document.getElementById('browserWalletBtn');
+            const walletConnectBtn = document.getElementById('walletConnectBtn');
+            const closeWalletModal = document.getElementById('closeWalletModal');
             const nftContractElement = document.getElementById('nftContract');
             const rewardTokenElement = document.getElementById('rewardToken');
             const rewardRateElement = document.getElementById('rewardRate');
 
-            let provider, signer, stakingContract;
+            let provider, signer, stakingContract, walletConnectProvider;
+
+            // Initialize WalletConnect
+            async function initWalletConnect() {
+                console.log('Initializing WalletConnect...');
+                walletConnectProvider = await EthereumProvider.init({
+                    projectId: 'YOUR_WALLET_CONNECT_PROJECT_ID', // Replace with your WalletConnect Project ID
+                    chains: [8453], // Base mainnet
+                    optionalChains: [84531], // Base Sepolia
+                    showQrModal: true,
+                    metadata: {
+                        name: 'NFT Staking Platform',
+                        description: 'Stake NFTs on Base blockchain',
+                        url: window.location.origin,
+                        icons: ['https://base.org/images/base-icon.svg']
+                    }
+                });
+            }
 
             // Initialize contract
             async function initializeContract() {
                 console.log('Initializing contract...');
-                provider = new ethers.providers.Web3Provider(window.ethereum);
                 signer = provider.getSigner();
                 stakingContract = new ethers.Contract(contractAddress, stakingContractABI, signer);
             }
@@ -637,7 +645,7 @@
                 });
             }
 
-            // Fetch user stakes (since stakes mapping isn't directly iterable)
+            // Fetch user stakes
             async function getUserStakes(userAddress) {
                 console.log('Fetching stakes for:', userAddress);
                 const stakes = [];
@@ -659,25 +667,39 @@
                 return stakes;
             }
 
-            // Wallet connection
-            async function connectWallet() {
-                console.log('Connect Wallet button clicked');
+            // Detect browser wallet
+            function detectBrowserWallet() {
+                if (window.ethereum) {
+                    if (window.ethereum.isMetaMask) {
+                        console.log('MetaMask detected');
+                        return 'MetaMask';
+                    } else if (window.ethereum.isCoinbaseWallet) {
+                        console.log('Coinbase Wallet detected');
+                        return 'Coinbase Wallet';
+                    } else {
+                        console.log('Unknown wallet provider detected');
+                        return 'Other';
+                    }
+                }
+                console.log('No browser wallet detected');
+                return null;
+            }
+
+            // Connect Browser Wallet
+            async function connectBrowserWallet() {
+                console.log('Connecting browser wallet...');
                 if (!window.ethereum) {
-                    alert("Please install MetaMask, Coinbase Wallet, or another compatible wallet. Visit https://metamask.io or https://www.coinbase.com/wallet to get started.");
+                    alert("Please install MetaMask, Coinbase Wallet, or another compatible wallet. Visit https://metamask.io or https://www.coinbase.com/wallet.");
                     console.error('No wallet provider detected');
                     return;
                 }
                 try {
-                    console.log('Requesting wallet accounts...');
                     provider = new ethers.providers.Web3Provider(window.ethereum);
                     await provider.send("eth_requestAccounts", []);
-                    signer = provider.getSigner();
-                    const address = await signer.getAddress();
-                    console.log('Connected wallet address:', address);
                     const network = await provider.getNetwork();
                     console.log('Current network chain ID:', network.chainId);
                     if (network.chainId !== 8453) { // Base mainnet
-                        // For Base Sepolia testing, change to 84531 and chainId to '0x213f'
+                        // For Base Sepolia, change to 84531 and chainId to '0x213f'
                         try {
                             console.log('Switching to Base mainnet...');
                             await window.ethereum.request({
@@ -690,29 +712,61 @@
                             return;
                         }
                     }
-                    walletInfo.classList.remove('hidden');
-                    walletAddress.textContent = address;
-                    connectWalletBtn.textContent = "Connected";
-                    connectWalletBtn2.textContent = "Connected";
-                    connectWalletBtn.classList.remove('bg-blue-600');
-                    connectWalletBtn.classList.add('bg-green-500');
-                    connectWalletBtn2.classList.remove('bg-blue-600');
-                    connectWalletBtn2.classList.add('bg-green-500');
-                    stakeBtn.disabled = false;
-                    unstakeBtn.disabled = false;
-                    claimRewardsBtn.disabled = false;
-                    await initializeContract();
-                    await initUI();
-                    alert("Wallet connected successfully!");
+                    await connectWalletSuccess();
                 } catch (error) {
-                    console.error("Wallet connection failed:", error);
+                    console.error("Browser wallet connection failed:", error);
                     updateModalError("Connection Failed", `Error: ${error.message}`);
                 }
             }
 
+            // Connect WalletConnect
+            async function connectWalletConnect() {
+                console.log('Connecting WalletConnect...');
+                try {
+                    await walletConnectProvider.connect();
+                    provider = new ethers.providers.Web3Provider(walletConnectProvider);
+                    const network = await provider.getNetwork();
+                    console.log('Current network chain ID:', network.chainId);
+                    if (network.chainId !== 8453) {
+                        alert("Please switch to the Base network in your wallet.");
+                        console.error('Wrong network');
+                        return;
+                    }
+                    await connectWalletSuccess();
+                } catch (error) {
+                    console.error("WalletConnect connection failed:", error);
+                    updateModalError("Connection Failed", `Error: ${error.message}`);
+                }
+            }
+
+            // Common wallet connection success logic
+            async function connectWalletSuccess() {
+                signer = provider.getSigner();
+                const address = await signer.getAddress();
+                console.log('Connected wallet address:', address);
+                walletInfo.classList.remove('hidden');
+                walletAddress.textContent = address;
+                connectWalletBtn.textContent = "Connected";
+                connectWalletBtn2.textContent = "Connected";
+                connectWalletBtn.classList.remove('bg-blue-600');
+                connectWalletBtn.classList.add('bg-green-500');
+                connectWalletBtn2.classList.remove('bg-blue-600');
+                connectWalletBtn2.classList.add('bg-green-500');
+                stakeBtn.disabled = false;
+                unstakeBtn.disabled = false;
+                claimRewardsBtn.disabled = false;
+                await initializeContract();
+                await initUI();
+                walletModal.classList.add('hidden');
+                alert("Wallet connected successfully!");
+            }
+
             // Disconnect wallet
-            disconnectWalletBtn.addEventListener('click', () => {
+            disconnectWalletBtn.addEventListener('click', async () => {
                 console.log('Disconnect Wallet clicked');
+                if (walletConnectProvider) {
+                    await walletConnectProvider.disconnect();
+                }
                 walletInfo.classList.add('hidden');
                 connectWalletBtn.textContent = "Connect Wallet";
                 connectWalletBtn2.textContent = "Connect Wallet";
@@ -907,14 +961,20 @@
             console.log('Attaching event listeners...');
             connectWalletBtn.addEventListener('click', () => {
                 console.log('Connect Wallet (nav) clicked');
-                connectWallet();
+                walletModal.classList.remove('hidden');
             });
             connectWalletBtn2.addEventListener('click', () => {
                 console.log('Connect Wallet (hero) clicked');
-                connectWallet();
+                walletModal.classList.remove('hidden');
+            });
+            browserWalletBtn.addEventListener('click', connectBrowserWallet);
+            walletConnectBtn.addEventListener('click', connectWalletConnect);
+            closeWalletModal.addEventListener('click', () => {
+                console.log('Close Wallet Modal clicked');
+                walletModal.classList.add('hidden');
             });
             closeModal.addEventListener('click', () => {
-                console.log('Close Modal clicked');
+                console.log('Close Transaction Modal clicked');
                 transactionModal.classList.add('hidden');
             });
 
@@ -926,6 +986,8 @@
             nftContractElement.textContent = "Not connected";
             rewardTokenElement.textContent = "Not connected";
             rewardRateElement.textContent = "Not connected";
+            await initWalletConnect();
+            detectBrowserWallet();
         };
     </script>
 </body>
